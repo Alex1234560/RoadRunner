@@ -19,11 +19,17 @@ public class MeepMeepTesting {
         RoadRunnerBotEntity myBot = new DefaultBotBuilder(meepMeep)
                 // Set bot constraints: maxVel, maxAccel, maxAngVel, maxAngAccel, track width
                 .setConstraints(60, 60, Math.toRadians(180), Math.toRadians(180), 15)
+
                 .followTrajectorySequence(drive -> drive.trajectorySequenceBuilder(new Pose2d(0, 0, 0))
-                        // Strafe to the de stination while simultaneously turning to a 90-degree heading
+                        // Strafe to the destination while simultaneously turning to a 90-degree heading
                         .lineToLinearHeading(new Pose2d(-30, -30, Math.toRadians(-40)))
 
+
                         /*.forward(30)
+
+                            .lineToX(DISTANCE)
+                            .lineToX(0)
+                            .build());
 
                         .forward(30)
 
@@ -33,6 +39,8 @@ public class MeepMeepTesting {
                         .turn(Math.toRadians(90))
                         .*/
                         .build());
+
+
 
         Image img = null;
         // New way with relative path

@@ -14,6 +14,8 @@ import javax.imageio.ImageIO;
 
 
 public class MeepMeepTesting {
+    public static int squareSize = 12;
+
     public static void main(String[] args) {
         MeepMeep meepMeep = new MeepMeep(800);
         RoadRunnerBotEntity myBot = new DefaultBotBuilder(meepMeep)
@@ -21,8 +23,15 @@ public class MeepMeepTesting {
                 .setConstraints(60, 60, Math.toRadians(180), Math.toRadians(180), 15)
 
                 .followTrajectorySequence(drive -> drive.trajectorySequenceBuilder(new Pose2d(0, 0, 0))
-                        // Strafe to the destination while simultaneously turning to a 90-degree heading
-                        .lineToLinearHeading(new Pose2d(-30, -30, Math.toRadians(-40)))
+
+                        .strafeTo(new Vector2d(0, squareSize))
+                        .turn(Math.toRadians(90))
+                        .strafeTo(new Vector2d(squareSize, squareSize))
+                        .strafeTo(new Vector2d(squareSize, 0))
+                        .strafeTo(new Vector2d(0, 0))
+                        .waitSeconds(1)
+
+                        .splineToLinearHeading(new Pose2d(12, 12, Math.toRadians(-40)), 1)
 
 
                         /*.forward(30)
@@ -49,7 +58,7 @@ public class MeepMeepTesting {
         catch(IOException e) {}
 
         meepMeep.setBackground(img)
-        //meepMeep.setBackground(MeepMeep.Background.FIELD_INTOTHEDEEP_JUICE_DARK)
+                //meepMeep.setBackground(MeepMeep.Background.FIELD_INTOTHEDEEP_JUICE_DARK)
                 .setDarkMode(true)
                 .setBackgroundAlpha(0.95f)
                 .addEntity(myBot)

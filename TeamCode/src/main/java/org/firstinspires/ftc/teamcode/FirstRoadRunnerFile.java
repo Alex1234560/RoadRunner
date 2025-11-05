@@ -34,26 +34,29 @@ public class FirstRoadRunnerFile extends LinearOpMode {
     @Override
     public void runOpMode() {
         // instantiate your MecanumDrive at a particular pose.
-        Pose2d initialPose = new Pose2d(0, 0, Math.toRadians(0));
+        Pose2d initialPose = new Pose2d(0, 0, 0);
         MecanumDrive drive = new MecanumDrive(hardwareMap, initialPose);
         Action trajectoryAction = drive.actionBuilder(initialPose)
 
-                .strafeTo(new Vector2d(0, squareSize))
-                .strafeTo(new Vector2d(squareSize, squareSize))
-                .waitSeconds(.5)
-                .strafeTo(new Vector2d(squareSize, 0))
-                .strafeTo(new Vector2d(0, 0))
+                .strafeTo(new Vector2d(60, 60))
+                .strafeTo(new Vector2d(60, -60))
+
+
+
                 .waitSeconds(1)
-                .turn(Math.toRadians(90))
+
 
                 //.splineToLinearHeading(new Pose2d(squareSize, squareSize, Math.toRadians(-40)), 1)
                 .build(); // <-- Thi
+
+
 
         waitForStart();
 
         // This is how you run the action you just built.
         if (opModeIsActive()) {
             Actions.runBlocking(trajectoryAction);
+            telemetry.update();
         }
 
 

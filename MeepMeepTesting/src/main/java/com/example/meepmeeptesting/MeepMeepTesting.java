@@ -24,14 +24,17 @@ public class MeepMeepTesting {
 
                 .followTrajectorySequence(drive -> drive.trajectorySequenceBuilder(new Pose2d(0, 0, 0))
 
-                        .strafeTo(new Vector2d(0, squareSize))
-                        .turn(Math.toRadians(90))
-                        .strafeTo(new Vector2d(squareSize, squareSize))
-                        .strafeTo(new Vector2d(squareSize, 0))
-                        .strafeTo(new Vector2d(0, 0))
+                        //.strafeTo(new Vector2d(0, squareSize))
+                        //.waitSeconds(1)
+                        //.turn(Math.toRadians(90))
                         .waitSeconds(1)
+                        .turn(90)
+                        //.strafeTo(new Vector2d(squareSize, squareSize))
+                        //.strafeTo(new Vector2d(squareSize, 0))
+                        //.strafeTo(new Vector2d(0, 0))
 
-                        .splineToLinearHeading(new Pose2d(12, 12, Math.toRadians(-40)), 1)
+
+                        //.splineToLinearHeading(new Pose2d(12, 12, Math.toRadians(-40)), 1)
 
 
                         /*.forward(30)

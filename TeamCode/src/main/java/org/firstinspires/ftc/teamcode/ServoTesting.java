@@ -35,12 +35,15 @@ public class ServoTesting extends LinearOpMode {
 
     private Servo ServoShooter1;
     private Servo ServoShooter2;
-    private DcMotorEx ShooterMotor = null;
+    private DcMotorEx ShooterMotor1 = null;
+    private DcMotorEx ShooterMotor2 = null;
+
 
 
 
     //public static double DirectionMultiplierForServo2=  0;
-    public static double ShooterMotorSpeed = .8;
+    public static double ShooterMotorSpeed = .05;
+    public static double Direction = -1;
     public static double startPoint = 0;
     public static double endPoint = 1;
 
@@ -51,9 +54,11 @@ public class ServoTesting extends LinearOpMode {
 
         ServoShooter1 = hardwareMap.get(Servo.class, "ServoShooter1");
         ServoShooter2 = hardwareMap.get(Servo.class, "ServoShooter2");
-        ShooterMotor = hardwareMap.get(DcMotorEx.class, "Shooter");
+        ShooterMotor1 = hardwareMap.get(DcMotorEx.class, "Shooter");
+        ShooterMotor2 = hardwareMap.get(DcMotorEx.class, "Shooter2");
 
-        ShooterMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        ShooterMotor1.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        ShooterMotor2.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
 
 
         // Wait for the game to start (driver presses START)
@@ -67,8 +72,12 @@ public class ServoTesting extends LinearOpMode {
         while (opModeIsActive()) {
 
             if (gamepad1.x){
-                ShooterMotor.setPower(ShooterMotorSpeed);
-            } else {ShooterMotor.setPower(0);}
+                ShooterMotor1.setPower(ShooterMotorSpeed);
+                ShooterMotor2.setPower(ShooterMotorSpeed*Direction);
+            } else {
+                ShooterMotor1.setPower(0);
+                ShooterMotor2.setPower(0);
+            }
 
 
 

@@ -34,6 +34,7 @@ import com.acmerobotics.roadrunner.PoseVelocity2d;
 import com.acmerobotics.roadrunner.Vector2d;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
+import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.Servo;
@@ -43,7 +44,7 @@ import com.qualcomm.robotcore.util.ElapsedTime;
 
 @TeleOp
 
-public class MountDougTeleOp extends LinearOpMode {
+public class CleanTeleop extends LinearOpMode {
 
     // Setting up drivetrain file
 
@@ -53,6 +54,10 @@ public class MountDougTeleOp extends LinearOpMode {
     private DcMotorEx IntakeMotor = null;
     private DcMotor StopIntakeMotor = null;
     private DcMotorEx ShooterMotor = null;
+    private DcMotorEx ShooterMotor2 = null;
+    private CRServo BallFeederServo = null;
+
+
 
     //Variables for statement printing
     double ShooterMotorSpeed = .8;
@@ -78,11 +83,15 @@ public class MountDougTeleOp extends LinearOpMode {
         IntakeMotor = hardwareMap.get(DcMotorEx.class, "INTAKE");
         StopIntakeMotor = hardwareMap.get(DcMotor.class, "StopIntake");
         ShooterMotor = hardwareMap.get(DcMotorEx.class, "Shooter");
+        BallFeederServo = hardwareMap.get(CRServo.class, "BallFeederServo");
+        ShooterMotor2 = hardwareMap.get(DcMotorEx.class, "Shooter2");
 
         // run shooter with encoder
 
         ShooterMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        ShooterMotor2.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         IntakeMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+
         //whats supposed to be in initialize hardware
 
         MecanumDrive drive = new MecanumDrive(hardwareMap, new Pose2d(0, 0, 0));
@@ -129,10 +138,8 @@ public class MountDougTeleOp extends LinearOpMode {
         }
     }
 
-
-
     private void handleShooter(){
-        double shooterVelocity = ShooterMotor.getVelocity(); // Ticks per second
+        shooterVelocity = ShooterMotor.getVelocity(); // Ticks per second
 
         boolean isXPressed = gamepad2.x;
 
@@ -160,6 +167,9 @@ public class MountDougTeleOp extends LinearOpMode {
 // VERY IMPORTANT: Update the tracking variables for the next loop cycle
         wasDpadUpPressed = isDpadUpPressed;
         wasDpadDownPressed = isDpadDownPressed;
+
+        ShooterMotor.setPower(1*ShooterMotorSpeed);
+        ShooterMotor2.setPower(-1*ShooterMotorSpeed);
 
 
     }

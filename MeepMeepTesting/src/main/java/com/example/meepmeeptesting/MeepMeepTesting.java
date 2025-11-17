@@ -31,14 +31,9 @@ public class MeepMeepTesting {
                                 //.strafeTo(new Vector2d(40, 0))
                         // Strafe to (50, 50) while turning to a 90-degree heading.
                         // The last argument is the end tangent, which affects the path shape.
-                        .strafeTo(new Vector2d(squareSize, 0))
-                        .waitSeconds(.2)
-                        .strafeTo(new Vector2d(squareSize, squareSize))
-                        .waitSeconds(.2)
-                        .strafeTo(new Vector2d(0, squareSize))
-                        .waitSeconds(.2)
-                        .strafeTo(new Vector2d(0, 0))
-                        .strafeTo(new Vector2d(24, 24))
+                        .strafeTo(new Vector2d(-11.1,39.1))
+
+
 
 
                         //.(new Vector2d(0, 0),Math.toRadians(180))

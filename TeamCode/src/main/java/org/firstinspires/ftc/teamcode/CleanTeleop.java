@@ -185,6 +185,11 @@ public class MountDougTeleOp extends LinearOpMode {
         IntakeMotor.setPower(intake);
         StopIntakeMotor.setPower(StopIntake);
 
+        //handle feeder to launcher
+        if (gamepad2.right_bumper){BallFeederServo.setPower(1);}
+        else if (gamepad2.left_bumper){BallFeederServo.setPower(-1);}
+        else{BallFeederServo.setPower(0);}
+
     }
 
     //private void InitializeHardware(){}

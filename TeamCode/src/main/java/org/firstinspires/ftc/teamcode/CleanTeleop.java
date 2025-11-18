@@ -56,6 +56,7 @@ public class CleanTeleop extends LinearOpMode {
     private DcMotorEx ShooterMotor = null;
     private DcMotorEx ShooterMotor2 = null;
     private CRServo BallFeederServo = null;
+    private CRServo ShooterRotatorServo = null;
 
 
 
@@ -83,8 +84,10 @@ public class CleanTeleop extends LinearOpMode {
         IntakeMotor = hardwareMap.get(DcMotorEx.class, "INTAKE");
         StopIntakeMotor = hardwareMap.get(DcMotor.class, "StopIntake");
         ShooterMotor = hardwareMap.get(DcMotorEx.class, "Shooter");
-        BallFeederServo = hardwareMap.get(CRServo.class, "BallFeederServo");
         ShooterMotor2 = hardwareMap.get(DcMotorEx.class, "Shooter2");
+        BallFeederServo = hardwareMap.get(CRServo.class, "BallFeederServo");
+        ShooterRotatorServo = hardwareMap.get(CRServo.class, "ShooterRotatorServo");
+
 
         // run shooter with encoder
 
@@ -171,6 +174,13 @@ public class CleanTeleop extends LinearOpMode {
         ShooterMotor.setPower(1*ShooterMotorSpeed);
         ShooterMotor2.setPower(-1*ShooterMotorSpeed);
 
+        //handle rotation of shooter HEHEEEHHEHE
+
+        if (gamepad2.dpad_left){ShooterRotatorServo.setPower(1);}
+        else if (gamepad2.dpad_right){ShooterRotatorServo.setPower(-1);}
+        else{ShooterRotatorServo.setPower(0);}
+
+
 
     }
 
@@ -190,7 +200,7 @@ public class CleanTeleop extends LinearOpMode {
             intake = -TriggerValue;
         }
 
-        double StopIntake = -gamepad2.right_trigger;
+        double StopIntake = gamepad2.right_trigger;
 
         IntakeMotor.setPower(intake);
         StopIntakeMotor.setPower(StopIntake);

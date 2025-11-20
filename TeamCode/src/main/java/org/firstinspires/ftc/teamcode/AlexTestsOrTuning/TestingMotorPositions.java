@@ -9,7 +9,7 @@ import com.qualcomm.robotcore.hardware.DcMotor;
 
 //@Config
 @Autonomous
-@Disabled
+
 
 public class TestingMotorPositions extends LinearOpMode {
 

@@ -6,8 +6,10 @@ import androidx.annotation.NonNull;
 import com.acmerobotics.dashboard.config.Config;
 import com.acmerobotics.dashboard.telemetry.TelemetryPacket;
 import com.acmerobotics.roadrunner.Action;
+import com.acmerobotics.roadrunner.ParallelAction;
 import com.acmerobotics.roadrunner.Pose2d;
 import com.acmerobotics.roadrunner.SequentialAction;
+import com.acmerobotics.roadrunner.TrajectoryActionBuilder;
 import com.acmerobotics.roadrunner.Vector2d;
 import com.acmerobotics.roadrunner.ftc.Actions;
 
@@ -33,7 +35,7 @@ public class RoadRunnerAuto extends LinearOpMode {
         public Intake(HardwareMap hardwareMap) {
             intakeMotor = hardwareMap.get(DcMotorEx.class, "INTAKE");
             intakeMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-            intakeMotor.setDirection(DcMotor.Direction.FORWARD);
+            intakeMotor.setDirection(DcMotor.Direction.REVERSE);
             StopIntakeMotor = hardwareMap.get(DcMotor.class, "StopIntake");
             StopIntakeMotor.setDirection(DcMotor.Direction.FORWARD);
         }
@@ -41,7 +43,7 @@ public class RoadRunnerAuto extends LinearOpMode {
         public class IntakeBalls implements Action {
             private boolean initialized = false;
             private ElapsedTime timer; // To track time
-            private double duration = 1;   // How long to run in seconds
+            private double duration = 2;   // How long to run in seconds
 
             public IntakeBalls() {
                 this.timer = new ElapsedTime(); // This creates the timer object.
@@ -78,20 +80,34 @@ public class RoadRunnerAuto extends LinearOpMode {
         MecanumDrive drive = new MecanumDrive(hardwareMap, initialPose);
         Intake intake = new Intake(hardwareMap);
 
+        // actionBuilder builds from the drive steps passed to it
+        Pose2d pose = drive.localizer.getPose();
+        TrajectoryActionBuilder GetToBalls = drive.actionBuilder(initialPose)
+                .strafeTo(new Vector2d(-11, 25))
+                .turn(Math.toRadians(90))
+
+                ;
+        TrajectoryActionBuilder MoveForwards = drive.actionBuilder(initialPose)
+
+                .strafeTo(new Vector2d(-11, 50))
+
+
+                ;
         waitForStart();
+
 
         if (isStopRequested()) return;
 
-
-
-
         Actions.runBlocking(
+
                 new SequentialAction(
+                        //GetToBalls.build(),
+                        new ParallelAction(
+                        MoveForwards.build(),
                         intake.intakeBalls()
 
-
+                        )
                 )
         );
-
     }
 }

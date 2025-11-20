@@ -14,15 +14,15 @@ import javax.imageio.ImageIO;
 
 
 public class MeepMeepTesting {
-    public static int squareSize = 48;
+    public static int side = 1; // - equal blue,+ equal red
 
     public static void main(String[] args) {
         MeepMeep meepMeep = new MeepMeep(800);
         RoadRunnerBotEntity myBot = new DefaultBotBuilder(meepMeep)
                 // Set bot constraints: maxVel, maxAccel, maxAngVel, maxAngAccel, track width
-                .setConstraints(60, 60, Math.toRadians(180), Math.toRadians(180), 15)
+                .setConstraints(60, 60, Math.toRadians(180), Math.toRadians(180), 15)//track width 15
 
-                .followTrajectorySequence(drive -> drive.trajectorySequenceBuilder(new Pose2d(0, 0, Math.toRadians(0)))
+                .followTrajectorySequence(drive -> drive.trajectorySequenceBuilder(new Pose2d(-62, 38*side, Math.toRadians(0))) // for next to wall on shooter thing
 
                         //.strafeTo(new Vector2d(0, squareSize))
                         //.waitSeconds(1)
@@ -31,34 +31,22 @@ public class MeepMeepTesting {
                                 //.strafeTo(new Vector2d(40, 0))
                         // Strafe to (50, 50) while turning to a 90-degree heading.
                         // The last argument is the end tangent, which affects the path shape.
-                        .strafeTo(new Vector2d(-11.1,39.1))
+                        //.strafeTo(new Vector2d(-11.1,39.1))
+
+                        //.strafeTo(new Vector2d(-11,30))
+                        // FROM:
 
 
 
-
-                        //.(new Vector2d(0, 0),Math.toRadians(180))
-
-
-                        .waitSeconds(5)
-                        //.strafeTo(new Vector2d(0, 0))
-
-
-                        //.splineToLinearHeading(new Pose2d(12, 12, Math.toRadians(-40)), 1)
-
-
-                        /*.forward(30)
-
-                            .lineToX(DISTANCE)
-                            .lineToX(0)
-                            .build());
-
-                        .forward(30)
-
-                        .forward(30)
+                        .strafeTo(new Vector2d(-11, 25))
                         .turn(Math.toRadians(90))
-                        .forward(30)
-                        .turn(Math.toRadians(90))
-                        .*/
+                        .strafeTo(new Vector2d(-11, 50))
+
+
+
+
+
+
                         .build());
 
 

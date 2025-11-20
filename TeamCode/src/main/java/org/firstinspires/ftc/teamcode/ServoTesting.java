@@ -43,7 +43,6 @@ public class ServoTesting extends LinearOpMode {
 
     //public static double DirectionMultiplierForServo2=  0;
     public static double ShooterMotorSpeed = .05;
-    public static double Direction = -1;
     public static double startPoint = 0;
     public static double endPoint = 1;
 
@@ -73,7 +72,7 @@ public class ServoTesting extends LinearOpMode {
 
             if (gamepad1.x){
                 ShooterMotor1.setPower(ShooterMotorSpeed);
-                ShooterMotor2.setPower(ShooterMotorSpeed*Direction);
+                ShooterMotor2.setPower(ShooterMotorSpeed*-1);
             } else {
                 ShooterMotor1.setPower(0);
                 ShooterMotor2.setPower(0);

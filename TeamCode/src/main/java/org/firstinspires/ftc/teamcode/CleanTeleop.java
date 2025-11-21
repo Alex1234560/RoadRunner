@@ -102,12 +102,7 @@ public class CleanTeleop extends LinearOpMode {
     // --- Button Variables For Shooter ---
     private boolean shooterMotorOn = false;      // Tracks if the motor should be on or off
     ArrayList<Double> LastValuesList = new ArrayList<>();
-    //private boolean wasXButtonPressed = false;   // Tracks the button's state from the last loop
-    // ------------
 
-    // --- D-pad tracking ---
-    private boolean wasDpadUpPressed = false;
-    private boolean wasDpadDownPressed = false;
 
 // ---------------------------------------
 
@@ -253,21 +248,17 @@ public class CleanTeleop extends LinearOpMode {
         //wasXButtonPressed = isXPressed;
 
         // SHOOTING VARIABLE MECHANICS START
-        boolean isDpadUpPressed = gamepad2.dpad_up;
-        boolean isDpadDownPressed = gamepad2.dpad_down;
 
 // Check if D-pad down was JUST pressed (rising edge detection)
-        if (isDpadDownPressed && !wasDpadDownPressed && ShooterMotorSpeed > 0) {
+        if (gamepad2.dpadDownWasPressed() && ShooterMotorSpeed > 0) {
             ShooterMotorSpeed -= 0.05;
         }
 // Check if D-pad up was JUST pressed
-        else if (isDpadUpPressed && !wasDpadUpPressed && ShooterMotorSpeed < 1) {
+        else if (gamepad2.dpadUpWasPressed() && ShooterMotorSpeed < 1) {
             ShooterMotorSpeed += 0.05;
         }
 
-// VERY IMPORTANT: Update the tracking variables for the next loop cycle
-        wasDpadUpPressed = isDpadUpPressed;
-        wasDpadDownPressed = isDpadDownPressed;
+// VERY IMPORTANT: Update the tracking variables for the next loop cycl
 
         if (shooterMotorOn) {
 

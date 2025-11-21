@@ -42,6 +42,7 @@ import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.IMU;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
+import com.qualcomm.robotcore.util.Range;
 
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 
@@ -60,9 +61,9 @@ public class CleanTeleop extends LinearOpMode {
     //setting up shooter servo stuff
     private Servo ServoShooter1;
     private Servo ServoShooter2;
-    public static double startPoint = .2;
-    public static double endPoint = .70;
-    private static double shooterAngle = startPoint;
+    public static double startPoint = .30;
+    public static double endPoint = .75;//.7
+    private static double ShooterAngle = startPoint;
     //setting up motors and time
     private ElapsedTime runtime = new ElapsedTime();
     private DcMotorEx IntakeMotor = null;
@@ -73,15 +74,25 @@ public class CleanTeleop extends LinearOpMode {
     private Servo ShooterRotatorServo = null;
     private IMU imu;
 
+    // angle for hooded shooter
+    double HoodAngle = 0;// value from 0 to 1.0
+
+    //shooter rotatr
+    /*public static double SlowAmountOfMovement = 0.0025;
+    public static double FastAmountOfMovement = 0.007;
+    public static double AmountOfMovement = 0.0025;*/
+
     //starting angle
     private double startingAngleRad = Math.toRadians(0);
 
     //april tag stuff
     private double AprilTagBearing = 0;
-    private double AprilTagIdTeam = 20;//20 blue | 24 red
+    public static double AprilTagIdTeam = 20;//20 blue | 24 red
+    private double rotationTolerance = 1.5;
+    public static double rotationCompensation = .09;
     //private boolean SelfAimToggle = true;
-    public static double currentAngle = 0;
-    public static double AmountOfMovement = 0.005;
+    public static double currentAngle = 90;
+
 
     //Variables for statement printing
     public static double ShooterMotorSpeed = .8;
@@ -113,6 +124,8 @@ public class CleanTeleop extends LinearOpMode {
         ServoShooter1 = hardwareMap.get(Servo.class, "ServoShooter1");
         ServoShooter2 = hardwareMap.get(Servo.class, "ServoShooter2");
 
+        ServoShooter1.setDirection(Servo.Direction.REVERSE);
+
 
         // run shooter with encoder
 
@@ -141,14 +154,17 @@ public class CleanTeleop extends LinearOpMode {
             telemetry.addData("Tag Visible", vision.isTagVisible());
 
             if (vision.isTagVisible()) {
-                //telemetry.addData("ID", vision.getID());
-                //telemetry.addData("Range", "%.2f in", vision.getRange());
-                //telemetry.addData("Yaw", "%.2f deg", vision.getYaw());
-                //telemetry.addData("X Offset", "%.2f in", vision.getX());
-                AprilTagBearing = vision.getBearing();
+                telemetry.addData("ID", vision.getID());
+                if (vision.getID()==AprilTagIdTeam) {
+                    telemetry.addData("Range", "%.2f in", vision.getRange());
+                    //telemetry.addData("Yaw", "%.2f deg", vision.getYaw());
+                    //telemetry.addData("X Offset", "%.2f in", vision.getX());
+                    AprilTagBearing = vision.getBearing();
+                }
             } else {
-                //telemetry.addData("ID", "None");
-                AprilTagBearing = 0;
+                telemetry.addData("ID", "None");
+
+                //AprilTagBearing = 0;
             }
 
             //handleDriving();
@@ -178,17 +194,35 @@ public class CleanTeleop extends LinearOpMode {
             handleShooter();
             handleShooterServos();
             handleShooterRotation(AprilTagBearing,vision.isTagVisible());
+            HandleCloseButton();
 
             //telemetry.addData("Status", "Run Time: " + runtime.toString());
             Pose2d pose = drive.localizer.getPose();
             //telemetry.addData("Heading ( Encoders prob )= ", Math.toDegrees(pose.heading.toDouble()));
-            telemetry.addData("Heading ( IMU )= ", Math.toDegrees(robotHeading));
+            //telemetry.addData("Heading ( IMU )= ", Math.toDegrees(robotHeading));
             telemetry.addData("ShooterPower= ", ShooterMotorSpeed);
             telemetry.addData("ShooterMotorTickPerSecond= ", shooterVelocity);
-            //telemetry.addData("Intake speed =  ", intakeVelocity);
+            telemetry.addData("x,y,heading ", pose.position.x + ", " + pose.position.y + ", heading: " + pose.heading.toDouble());
+
 
             telemetry.update();
         }
+    }
+
+    private void HandleCloseButton(){
+        if (gamepad2.left_bumper) {
+            currentAngle = 90;
+            ShooterMotorSpeed = .6;
+            ShooterAngle=.3;
+        }
+    }
+
+    private void HandleShootingRanges(){
+        //if (gamepad2.left_bumper) {
+        //            currentAngle = 90;
+        //            ShooterMotorSpeed = .6;
+        //            ShooterAngle=.3;
+        //        }
     }
 
     private void InitializeIMU() {
@@ -203,6 +237,7 @@ public class CleanTeleop extends LinearOpMode {
 
     }
 
+    //note to self need to change this to speed based, not power based.
     private void handleShooter(){
         shooterVelocity = ShooterMotor.getVelocity(); // Ticks per second
 
@@ -245,7 +280,7 @@ public class CleanTeleop extends LinearOpMode {
         }
         //stabilizing values to know when to shoot
         LastValuesList.add(shooterVelocity);
-        if (LastValuesList.size() > 4) {
+        if (LastValuesList.size() > 6) {
             LastValuesList.remove(0);
         }
         if (!LastValuesList.isEmpty()) {
@@ -263,51 +298,37 @@ public class CleanTeleop extends LinearOpMode {
 
     }
 
-    //note to self error occuring in handleShooterRotation idk why.
-    private void handleShooterRotation(double bearing, boolean tag){
+    //note to self error occuring in handleShooterRotation idk why. ( i think its solved now )
+    private void handleShooterRotation(double bearing, boolean tagBool){
 
-        if (gamepad2.dpad_left && currentAngle < 1){
-            currentAngle += .005;
+
+        if (gamepad2.dpad_right && currentAngle < 180){
+            currentAngle += 2;
         }
-        if (gamepad2.dpad_right && currentAngle > 0){
-            currentAngle -= .005;
-        }
-
-        if (Math.abs(bearing)>2 && Math.abs(bearing)<30 && gamepad2.b){
-
-            if (bearing < -2 && currentAngle < 1){
-                currentAngle +=AmountOfMovement;
-            }
-            if (bearing > 2 && currentAngle > 0){
-                currentAngle -=AmountOfMovement;
-            }
+        if (gamepad2.dpad_left && currentAngle > 0){
+            currentAngle -= 2;
         }
 
-        ShooterRotatorServo.setPosition(currentAngle);
+        if (Math.abs(bearing)>rotationTolerance && Math.abs(bearing)<30 && gamepad2.y) {
+            //currentAngle = 90;
+
+            currentAngle -= bearing * rotationCompensation;
+
+            currentAngle = Math.min(180, Math.max(0, currentAngle));
+        }
+
+        double ShooterRotationAngle = Range.scale(
+                currentAngle,   // value you want to map
+                0, 180,        // input range
+                0,  // output start
+                1     // output end
+        );
+
+        ShooterRotatorServo.setPosition(ShooterRotationAngle);
 
         telemetry.addData("current angle", currentAngle );
         telemetry.addData("bearing", bearing );
 
-
-       /* if (gamepad1.a && gamepad2.dpad_left || gamepad2.dpad_right){
-            SelfAimToggle = !SelfAimToggle;
-        }
-        if (!SelfAimToggle) {
-
-
-            if (gamepad2.dpad_right ) {
-               currentAngle = -90;
-            }
-            if (gamepad2.dpad_left) {
-                currentAngle = 90;
-            }
-        }
-
-
-
-        ShooterRotatorServo.setPosition((90+currentAngle)*1/180);
-        //ShooterRotatorServo.setPosition((90)*1/180);
-        */
 
     }
 
@@ -321,7 +342,7 @@ public class CleanTeleop extends LinearOpMode {
 
         double intake=0;
         if (gamepad2.right_bumper){ // to spit out balls
-            intake = .5;
+            intake = TriggerValue;
         }
         else { // to intake balls
             intake = -TriggerValue;
@@ -334,15 +355,26 @@ public class CleanTeleop extends LinearOpMode {
             intake = -TriggerValue;
         }*/
 
-        double StopIntake = gamepad2.right_trigger;
+        double StopIntake = 0;
+
+
+
+
+        //handle feeder to launcher
+        if (gamepad2.right_trigger > 0 && !gamepad2.right_bumper){
+            BallFeederServo.setPower(-gamepad2.right_trigger);
+            StopIntake = gamepad2.right_trigger;
+        }
+        else if (gamepad2.right_bumper){
+            BallFeederServo.setPower(gamepad2.right_trigger);
+            StopIntake = -gamepad2.right_trigger;
+        }
+        else{
+            BallFeederServo.setPower(0);
+        }
 
         IntakeMotor.setPower(intake);
         StopIntakeMotor.setPower(StopIntake);
-
-        //handle feeder to launcher
-        if (gamepad2.right_trigger > 0){BallFeederServo.setPower(gamepad2.right_trigger);}
-        else if (gamepad2.right_bumper){BallFeederServo.setPower(-1);}
-        else{BallFeederServo.setPower(0);}
 
     }
 
@@ -351,17 +383,25 @@ public class CleanTeleop extends LinearOpMode {
         // Initialize shooterAngle with the servo's current position to start.
         // This ensures it always has a value.
 
-
-        if (gamepad1.a) {
-            shooterAngle = startPoint;
-        } else if (gamepad1.b) {
-            shooterAngle = endPoint;
+        if (gamepad2.a || gamepad2.b) {
+            if (gamepad2.a && HoodAngle < 1) {
+                HoodAngle += .02;
+            } else if (gamepad2.b && HoodAngle > 0) {
+                HoodAngle -= .02;
+            }
+            ShooterAngle = Range.scale(
+                    HoodAngle,   // value you want to map
+                    0, 1,        // input range
+                    startPoint,  // output start
+                    endPoint     // output end
+            );
         }
 
-        // Now, shooterAngle is guaranteed to have a value,
-        // so the compiler will be happy.
-        ServoShooter1.setPosition(1 - shooterAngle);
-        ServoShooter2.setPosition(shooterAngle);
+        ServoShooter1.setPosition(ShooterAngle);
+        ServoShooter2.setPosition(ShooterAngle);
+        //telemetry.addData("ActualVAlueHood ", HoodAngle );
+        //telemetry.addData("Angle Servo 1= ", ShooterAngle );
+        //telemetry.addData("Angle Servo 2= ", (ShooterAngle  ));
     }
     }
 

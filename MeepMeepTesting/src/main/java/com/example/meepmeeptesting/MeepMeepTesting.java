@@ -22,7 +22,7 @@ public class MeepMeepTesting {
                 // Set bot constraints: maxVel, maxAccel, maxAngVel, maxAngAccel, track width
                 .setConstraints(60, 60, Math.toRadians(180), Math.toRadians(180), 15)//track width 15
 
-                .followTrajectorySequence(drive -> drive.trajectorySequenceBuilder(new Pose2d(-62, 38*side, Math.toRadians(0))) // for next to wall on shooter thing
+                .followTrajectorySequence(drive -> drive.trajectorySequenceBuilder(new Pose2d(0, 0, Math.toRadians(0)))//(new Pose2d(-62, 38*side, Math.toRadians(0))) // for next to wall on shooter thing
 
                         //.strafeTo(new Vector2d(0, squareSize))
                         //.waitSeconds(1)
@@ -38,9 +38,9 @@ public class MeepMeepTesting {
 
 
 
-                        .strafeTo(new Vector2d(-11, 25))
-                        .turn(Math.toRadians(90))
-                        .strafeTo(new Vector2d(-11, 50))
+                        //.strafeTo(new Vector2d(-11, 25))
+                        //.turn(Math.toRadians(90))
+                        .strafeTo(new Vector2d(14, 0))
 
 
 

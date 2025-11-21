@@ -80,7 +80,7 @@ public class ServoTesting extends LinearOpMode {
 
 
 
-            double ShooterAnglePercent = gamepad1.right_trigger;
+
             double ShooterAngle = ((endPoint-startPoint)*gamepad1.right_trigger) + startPoint;
 
 
@@ -90,8 +90,8 @@ public class ServoTesting extends LinearOpMode {
 
             // Show the elapsed game time and wheel power.
             //telemetry.addData("Status", "Run Time: " + runtime.toString());
-            telemetry.addData("Angle Servo 1= ", 1-ShooterAngle );
-            telemetry.addData("Angle Servo 2= ", (ShooterAngle  ));
+            //telemetry.addData("Angle Servo 1= ", 1-ShooterAngle );
+            //telemetry.addData("Angle Servo 2= ", (ShooterAngle  ));
 
             //telemetry.addData("Intake speed =  ", intakeVelocity);
 

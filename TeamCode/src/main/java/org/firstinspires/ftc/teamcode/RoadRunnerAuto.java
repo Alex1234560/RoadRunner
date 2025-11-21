@@ -89,7 +89,7 @@ public class RoadRunnerAuto extends LinearOpMode {
                 ;
         TrajectoryActionBuilder MoveForwards = drive.actionBuilder(initialPose)
 
-                .strafeTo(new Vector2d(-11, 50))
+                .strafeTo(new Vector2d(14, 0))
 
 
                 ;

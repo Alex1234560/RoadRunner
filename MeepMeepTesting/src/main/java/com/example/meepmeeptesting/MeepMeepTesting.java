@@ -14,7 +14,7 @@ import javax.imageio.ImageIO;
 
 
 public class MeepMeepTesting {
-    public static int side = 1; // - equal blue,+ equal red
+    public static int side = -1; // - equal blue,+ equal red
 
     public static void main(String[] args) {
         MeepMeep meepMeep = new MeepMeep(800);
@@ -22,7 +22,7 @@ public class MeepMeepTesting {
                 // Set bot constraints: maxVel, maxAccel, maxAngVel, maxAngAccel, track width
                 .setConstraints(60, 60, Math.toRadians(180), Math.toRadians(180), 15)//track width 15
 
-                .followTrajectorySequence(drive -> drive.trajectorySequenceBuilder(new Pose2d(0, 0, Math.toRadians(0)))//(new Pose2d(-62, 38*side, Math.toRadians(0))) // for next to wall on shooter thing
+                .followTrajectorySequence(drive -> drive.trajectorySequenceBuilder(new Pose2d(-45, 53*side, Math.toRadians((38+90)*side))) // for next to wall on shooter thing
 
                         //.strafeTo(new Vector2d(0, squareSize))
                         //.waitSeconds(1)
@@ -40,7 +40,10 @@ public class MeepMeepTesting {
 
                         //.strafeTo(new Vector2d(-11, 25))
                         //.turn(Math.toRadians(90))
-                        .strafeTo(new Vector2d(14, 0))
+                        .strafeTo(new Vector2d(-11, 20*side))
+                        .turn(Math.toRadians(-38*side))
+                        .strafeTo(new Vector2d(10, 20*side))
+
 
 
 

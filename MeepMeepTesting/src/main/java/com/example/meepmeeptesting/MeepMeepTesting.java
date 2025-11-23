@@ -15,6 +15,7 @@ import javax.imageio.ImageIO;
 
 public class MeepMeepTesting {
     public static int side = -1; // - equal blue,+ equal red
+    public static double StartingAngle = (90*side); // =128
 
     public static void main(String[] args) {
         MeepMeep meepMeep = new MeepMeep(800);
@@ -22,7 +23,7 @@ public class MeepMeepTesting {
                 // Set bot constraints: maxVel, maxAccel, maxAngVel, maxAngAccel, track width
                 .setConstraints(60, 60, Math.toRadians(180), Math.toRadians(180), 15)//track width 15
 
-                .followTrajectorySequence(drive -> drive.trajectorySequenceBuilder(new Pose2d(-45, 53*side, Math.toRadians((38+90)*side))) // for next to wall on shooter thing
+                .followTrajectorySequence(drive -> drive.trajectorySequenceBuilder(new Pose2d(-62, 33*side, Math.toRadians(StartingAngle))) // for next to wall on shooter thing
 
                         //.strafeTo(new Vector2d(0, squareSize))
                         //.waitSeconds(1)
@@ -40,9 +41,22 @@ public class MeepMeepTesting {
 
                         //.strafeTo(new Vector2d(-11, 25))
                         //.turn(Math.toRadians(90))
-                        .strafeTo(new Vector2d(-11, 20*side))
-                        .turn(Math.toRadians(-38*side))
-                        .strafeTo(new Vector2d(10, 20*side))
+                        //.strafeTo(new Vector2d(10, 53))
+                        .strafeTo(new Vector2d(20, 40*side))
+
+
+                        //grab balls
+                        .strafeTo(new Vector2d(-11, 53*side))
+
+//
+                        //  go back to before grabbing balls
+                        .strafeTo(new Vector2d(-11, 33*side))
+                        //turn to shooting place
+
+                        //  go to shooting place
+                        .strafeTo(new Vector2d(-62, 33*side))
+
+
 
 
 

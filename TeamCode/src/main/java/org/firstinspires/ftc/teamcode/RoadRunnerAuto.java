@@ -30,31 +30,34 @@ public class RoadRunnerAuto extends LinearOpMode {
     public class Intake {
         private DcMotorEx intakeMotor;
         private DcMotor StopIntakeMotor;
-        private CRServo BallFeederServo;
-        private CRServo ServoHelper;
+        private CRServo BallFeederServo = null;
+
+
+
 
 
 
         public Intake(HardwareMap hardwareMap) {
+            BallFeederServo = hardwareMap.get(CRServo.class, "BallFeederServo");
+            BallFeederServo.setDirection(CRServo.Direction.REVERSE);
+
             intakeMotor = hardwareMap.get(DcMotorEx.class, "INTAKE");
             intakeMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
             intakeMotor.setDirection(DcMotor.Direction.REVERSE);
             StopIntakeMotor = hardwareMap.get(DcMotor.class, "StopIntake");
             StopIntakeMotor.setDirection(DcMotor.Direction.FORWARD);
 
-            BallFeederServo = hardwareMap.get(CRServo.class, "BallFeederServo");
-            BallFeederServo.setDirection(DcMotorSimple.Direction.REVERSE);
-            ServoHelper = hardwareMap.get(CRServo.class, "ServoHelper");
-            ServoHelper.setDirection(DcMotorSimple.Direction.REVERSE);
+
+
 
         }
 
-        public class IntakeBalls implements Action {
+        public class IntakeOn implements Action {
             private boolean initialized = false;
             private ElapsedTime timer; // To track time
-            private double duration = 2;   // How long to run in seconds
+            private double duration = .001;   // How long to run in seconds
 
-            public IntakeBalls() {
+            public IntakeOn() {
                 this.timer = new ElapsedTime(); // This creates the timer object.
             }
 
@@ -62,20 +65,44 @@ public class RoadRunnerAuto extends LinearOpMode {
             public boolean run(@NonNull TelemetryPacket packet) {
                 if (!initialized) {
                     timer.reset();
-                    //intakeMotor.setPower(1);
-                    //StopIntakeMotor.setPower(1);
-                    ServoHelper.setPower(1);
+                    intakeMotor.setPower(1);
+                    StopIntakeMotor.setPower(1);
                     initialized = true;
                 }
+                packet.put("time", timer.seconds());
+                if (timer.seconds() < duration) {
+                    return true;
+                } else {
+//                    intakeMotor.setPower(0);
+//                    StopIntakeMotor.setPower(0);
+//                    ServoHelper.setPower(0);
+                    return false;
+                }
+            }
+        }
 
+        public class IntakeOff implements Action {
+            private boolean initialized = false;
+            private ElapsedTime timer; // To track time
+            private double duration = .001;   // How long to run in seconds
 
+            public IntakeOff() {
+                this.timer = new ElapsedTime(); // This creates the timer object.
+            }
+
+            @Override
+            public boolean run(@NonNull TelemetryPacket packet) {
+                if (!initialized) {
+                    timer.reset();
+                    initialized = true;
+                }
                 packet.put("time", timer.seconds());
                 if (timer.seconds() < duration) {
                     return true;
                 } else {
                     intakeMotor.setPower(0);
                     StopIntakeMotor.setPower(0);
-                    ServoHelper.setPower(0);
+
                     return false;
                 }
             }
@@ -84,7 +111,7 @@ public class RoadRunnerAuto extends LinearOpMode {
         public class PassABallToShooter implements Action {
             private boolean initialized = false;
             private ElapsedTime timer; // To track time
-            private double duration = 8;   // How long to run in seconds
+            private double duration = 10;   // How long to run in seconds
 
             public PassABallToShooter() {
                 this.timer = new ElapsedTime(); // This creates the timer object.
@@ -108,23 +135,28 @@ public class RoadRunnerAuto extends LinearOpMode {
                 if (timer.seconds() < duration) {
 
                     BallFeederServo.setPower(.35);
+                    telemetry.addData("Ball Feeder Servo Activated  ", 1 );
                     intakeMotor.setPower(.5);
+                    telemetry.addData("IntakeMotor  ", 1 );
                     StopIntakeMotor.setPower(.5);
-                    ServoHelper.setPower(1);
+                    telemetry.addData("StopIntakeMotor  ", 1 );
+
+
                     return true;
                 } else {
 
                     BallFeederServo.setPower(0);
                     intakeMotor.setPower(0);
                     StopIntakeMotor.setPower(0);
-                    ServoHelper.setPower(0);
+
 
                     return false;
                 }
             }
         }
 
-        public Action intakeBalls() {return new IntakeBalls();}
+        public Action intakeOff() {return new IntakeOff();}
+        public Action intakeOn() {return new IntakeOn();}
         public Action passABallToShooter() {return new PassABallToShooter();}
 
     }
@@ -166,8 +198,8 @@ public class RoadRunnerAuto extends LinearOpMode {
 
                     ShooterMotor.setPower(.6);
                     ShooterMotor2.setPower(.6);
-                    ServoShooter1.setPosition(.3);
-                    ServoShooter2.setPosition(.3);
+                    ServoShooter1.setPosition(.32);
+                    ServoShooter2.setPosition(.32);
                     ShooterRotatorServo.setPosition(.5);
                 }
                 packet.put("time", timer.seconds());
@@ -223,8 +255,12 @@ public class RoadRunnerAuto extends LinearOpMode {
 
     @Override
     public void runOpMode(){
-        double side = 1; // -1 is blue 1 is red
-        Pose2d initialPose = new Pose2d(-45, 53, Math.toRadians((38+90)*side));//(0, 0, Math.toRadians(0));
+        double side = -1; // -1 is blue 1 is red
+        double StartingAngle = (90*side); // =128
+        double turn90Left = -90;//StartingAngle-90;
+        double turn90Right = 90;//StartingAngle+90;
+
+        Pose2d initialPose = new Pose2d(-45, 53, Math.toRadians(StartingAngle));//(0, 0, Math.toRadians(0));
         MecanumDrive drive = new MecanumDrive(hardwareMap, initialPose);
         Intake intake = new Intake(hardwareMap);
         Shooter shooter = new Shooter(hardwareMap);
@@ -232,13 +268,34 @@ public class RoadRunnerAuto extends LinearOpMode {
         // actionBuilder builds from the drive steps passed to it
         Pose2d pose = drive.localizer.getPose();
         TrajectoryActionBuilder GoBackwards = drive.actionBuilder(initialPose)
-                .strafeTo(new Vector2d(-11, 20*side))
-                //.turn(Math.toRadians(-38))
-                .turn(Math.toRadians((-90-38)*side)) // turns 90 degrees to right
-                .strafeTo(new Vector2d(10, 20*side))
+                //.strafeTo(new Vector2d(-11, 20*side))
+
+
+                //.turn(Math.toRadians((-90-38)*side)) // turns 90 degrees to right
+                .strafeTo(new Vector2d(-11, 33*side))
+                //.strafeTo(new Vector2d(10, 20*side))
+                ;
+
+        TrajectoryActionBuilder DriveRightAwayFromShootingArea = drive.actionBuilder(initialPose)
+                //.strafeTo(new Vector2d(-11, 20*side))
+
+
+                //.turn(Math.toRadians((-90-38)*side)) // turns 90 degrees to right
+                .strafeTo(new Vector2d(10, 53))
+                //.strafeTo(new Vector2d(10, 20*side))
                 ;
         TrajectoryActionBuilder MoveForwards = drive.actionBuilder(initialPose)
-                .strafeTo(new Vector2d(14, 0))
+                .strafeTo(new Vector2d(-11, 53*side))
+
+                ;
+        TrajectoryActionBuilder GoToShootPos = drive.actionBuilder(initialPose)
+
+                .strafeTo(new Vector2d(-11, 33*side))
+                //turn to shooting place
+                //  go to shooting place
+                .strafeTo(new Vector2d(-62, 33*side))
+
+
                 ;
         waitForStart();
 
@@ -249,10 +306,25 @@ public class RoadRunnerAuto extends LinearOpMode {
 
                 new SequentialAction(
                         //GetToBalls.build(),
+                        //shooting stuff
                         shooter.runShooter(),
                         intake.passABallToShooter(),
                         shooter.turnOffShooter(),
+
                         GoBackwards.build()
+                        /*
+                        intake.intakeOn(),
+                        MoveForwards.build(),
+                        intake.intakeOff(),
+                        GoToShootPos.build(),
+
+                        //shooting stuff
+                        shooter.runShooter(),
+                        intake.passABallToShooter(),
+                        shooter.turnOffShooter()
+                        */
+
+
 
 
                         )

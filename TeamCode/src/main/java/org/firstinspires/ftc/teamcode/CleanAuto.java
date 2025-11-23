@@ -34,6 +34,7 @@ import com.acmerobotics.roadrunner.Pose2d;
 import com.acmerobotics.roadrunner.PoseVelocity2d;
 import com.acmerobotics.roadrunner.Vector2d;
 import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
+import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.CRServo;
@@ -47,15 +48,10 @@ import com.qualcomm.robotcore.util.Range;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 
 import java.util.ArrayList;
-import java.util.Collections;
 
 @Config
-@TeleOp
-
-public class CleanTeleop extends LinearOpMode {
-
-    // Setting up drivetrain file
-
+@Autonomous
+public class CleanAuto extends LinearOpMode {
 
     //setting up shooter servo stuff
     private Servo ServoShooter1;
@@ -63,6 +59,9 @@ public class CleanTeleop extends LinearOpMode {
     public static double startPoint = .30;
     public static double endPoint = .75;//.7
     private static double ShooterAngle = startPoint;
+
+    public static long TimeForBallToGetShotMS = 200;//.7
+    private static long TimeBetweenBallsMS = 500;
     //setting up motors and time
     private ElapsedTime runtime = new ElapsedTime();
     private DcMotorEx IntakeMotor = null;
@@ -98,7 +97,7 @@ public class CleanTeleop extends LinearOpMode {
 
     //Variables for statement printing
     private static double ShooterMotorSpeed = 0;
-    public static double GoalShooterMotorTPS = 1200;// rotation ticks per seond
+    public static double GoalShooterMotorTPS = 1500;// rotation ticks per seond
     //variables belof for testing
 //    public static double SpeedFast = 0.01;
 //    public static double SpeedNormal = 0.001;
@@ -123,9 +122,13 @@ public class CleanTeleop extends LinearOpMode {
 
 // ---------------------------------------
 
+
     @Override
     public void runOpMode() {
+
         InitializeIMU();
+
+
         IntakeMotor = hardwareMap.get(DcMotorEx.class, "INTAKE");
         StopIntakeMotor = hardwareMap.get(DcMotor.class, "StopIntake");
         ShooterMotor = hardwareMap.get(DcMotorEx.class, "Shooter");
@@ -155,6 +158,7 @@ public class CleanTeleop extends LinearOpMode {
         telemetry.update();
 
         waitForStart();
+
         imu.resetYaw();
         runtime.reset();
 
@@ -171,83 +175,105 @@ public class CleanTeleop extends LinearOpMode {
                     AprilTagBearing = vision.getBearing();
                 }
             }
-//            } else {
-//                //telemetry.addData("ID", "None");
 //
-//                //AprilTagBearing = 0;
-//            }
 
             //handleDriving();
-            double speed = .5;
+            double speed = 1;
             //if (gamepad1.right_trigger ==1){speed = 1;}
-            speed += gamepad1.right_trigger / 2;
 
-            double axial = -gamepad1.left_stick_y * speed;
-            double lateral = gamepad1.left_stick_x * speed; // Note: pushing stick forward gives negative value
-            double yaw = gamepad1.right_stick_x * speed;
+            double axial = 0 * speed;
+            double lateral =0 * speed; // Note: pushing stick forward gives negative value
+            double yaw = 0 * speed;
+
+
+
+            if (runtime.seconds()<30) {
+                handleShooter(1550, true);
+                ShooterAngle = .35;
+                handleShooterServos();
+
+
+            }else{handleShooter(1400, false);}
+
+
+            ShootCycle();
+
+            axial = -1;
+
+
 
             double robotHeading = imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.RADIANS);
-
-            double fieldCentricAxial = axial * Math.cos(robotHeading) - lateral * Math.sin(robotHeading);
-            double fieldCentricLateral = axial * Math.sin(robotHeading) + lateral * Math.cos(robotHeading);
-
-            if (gamepad1.x && gamepad1.b) {
-                imu.resetYaw();
-            }
-
-            if (gamepad1.xWasPressed()){
-                fieldCentricDrive = !fieldCentricDrive;
-            }
-
-            if (fieldCentricDrive) {
-                drive.setDrivePowers(new PoseVelocity2d(
-                        new Vector2d(fieldCentricAxial, -fieldCentricLateral), -yaw));
-            }
-
-            /**/ // this is for field centric
-
-            //robotDrive.move(axial, lateral, yaw, speed);
-            if (!fieldCentricDrive) {
-                drive.setDrivePowers(new PoseVelocity2d(
-                        new Vector2d(axial, -lateral), -yaw));
-            }
-            telemetry.addData("FieldCentricDrive?: ", fieldCentricDrive);
-            /*drive.setDrivePowers(new PoseVelocity2d(
-                    new Vector2d(fieldCentricAxial,fieldCentricLateral),-yaw)); */ // this is for field centric
-
-            // whats supposed to be in handle driving ^^
-
-            handleIntake();
-            handleShooter();
-            handleShooterServos();
-            handleShooterRotation(AprilTagBearing, vision.isTagVisible());
-
+            drive.setDrivePowers(new PoseVelocity2d(
+                    new Vector2d(axial, -lateral), -yaw));
 
             if (vision.isTagVisible()) {
                 range = vision.getRange();
             }
+            //handleShootingRanges(range,vision.isTagVisible());
 
-            handleShootingRanges(range,vision.isTagVisible());
-
-            //telemetry.addData("Status", "Run Time: " + runtime.toString());
+            telemetry.addData("Status", "Run Time: " + runtime.toString());
             Pose2d pose = drive.localizer.getPose();
             //telemetry.addData("Heading ( Encoders prob )= ", Math.toDegrees(pose.heading.toDouble()));
             //telemetry.addData("Heading ( IMU )= ", Math.toDegrees(robotHeading));
 
             telemetry.addData("GoalShooterPower= ", GoalShooterMotorTPS);
-            boolean stabilized;
-            if (Math.abs(shooterTPS - GoalShooterMotorTPS) <= ToleranceForShooting) {
-                stabilized = true;
-            } else{stabilized=false;}
-            //telemetry.addData("ShooterPower= ", ShooterMotorSpeed);
-            telemetry.addData("Stablized?: ", stabilized);
-
-
             telemetry.addData("ShooterMotorTickPerSecond= ", shooterTPS);
             //telemetry.addData("x,y,heading ", pose.position.x + ", " + pose.position.y + ", heading: " + pose.heading.toDouble());
 
 
             telemetry.update();
+            break;
+
+///
+            for (i = 0; i<=2; i++) {
+//            ShootCycle();
+//            //shootCycle
+//            //Replace this with the time it takes to move to the first ball segment
+//            double mainDist = 1.0;
+//
+//            //Replace this with the amount of time it takes to strafe between ball lines
+//            double ballDist = 0.7;
+//
+//            //This calculates the total amount of time the robot must strafe for to be in the correct position
+//            double timeTotal = mainDist + (ballDist * i);
+//
+//            //Move up
+//            /*
+//            Replace with code that turns on motor for timeTotal
+//             */
+//
+//
+//            //collect (same each time) (Move forward with intake on)
+//
+//
+//            //MoveDown
+//            /*
+//            Replace with code to move down timetotal
+//             */
+//            if (i == 2) {
+//                Shoot
+//            }
+//
+//        }
+//
+
+
+        }
+    }
+
+    private void ShootSingle() {
+        handleIntake(1,.5,.5);
+        sleep(TimeForBallToGetShotMS); //time it takes for ball to get shot
+        handleIntake(0,0,0);
+    }
+
+    private void ShootCycle() {
+        for (i = 0; i<=2; i++) {
+            ShootSingle();
+            if (i == 2) {
+                break;
+            }
+            sleep(TimeBetweenBallsMS);
         }
     }
 
@@ -289,17 +315,17 @@ public class CleanTeleop extends LinearOpMode {
     }
 
     //note to self need to change this to speed based, not power based.
-    private void handleShooter() {
+    private void handleShooter(double speed,boolean on) {
         shooterTPS = -ShooterMotor.getVelocity(); // Ticks per second
+        GoalShooterMotorTPS=speed;
+
 
         // 2. Check if the button was JUST pressed (it was up, but is now down)
-        if (gamepad2.xWasPressed()) {//(isXPressed && !wasXButtonPressed) {
-            // Flip the state: if it was on, turn it off; if it was off, turn it on.
-            shooterMotorOn = !shooterMotorOn;
+
+        shooterMotorOn = on;
 
 
-            ShooterMotorSpeed = calculateSpeedForShooter(GoalShooterMotorTPS);
-        }
+
 
 // Check if D-pad down was JUST pressed (rising edge detection)
         if (gamepad2.dpadDownWasPressed() && GoalShooterMotorTPS > 1100) {
@@ -401,63 +427,13 @@ public class CleanTeleop extends LinearOpMode {
 
     }
 
-    private void handleIntake() {
+    private void handleIntake(double roller, double StopIntake, double intake) {
         //double intakeVelocity = IntakeMotor.getVelocity(); // Ticks per second
-        double TriggerValue = 0;
 
-        if (gamepad2.left_trigger > gamepad1.left_trigger) {
-            TriggerValue = gamepad2.left_trigger;
-        }
-        if (gamepad1.left_trigger > gamepad2.left_trigger) {
-            TriggerValue = gamepad1.left_trigger;
-        }
-        if (gamepad2.left_trigger == gamepad1.left_trigger) {
-            TriggerValue = gamepad2.left_trigger;
-        }
-
-        double intake = 0;
-        if (gamepad2.right_bumper) { // to spit out balls
-            intake = TriggerValue;
-        } else { // to intake balls
-            intake = -TriggerValue;
-        }
-
-        double StopIntake = 0;
-
-        //handle feeder to launcher
-        if (gamepad2.right_trigger > 0 && !gamepad2.right_bumper) {
-
-
-            StopIntake = gamepad2.right_trigger;
-            ServoHelper.setPower(-1);
-
-        } else if (gamepad2.right_bumper) {
-            //BallFeederServo.setPower(gamepad2.right_trigger);
-            StopIntake = -gamepad2.right_trigger;
-
-            if (gamepad2.right_trigger > 0) {
-                ServoHelper.setPower(1);
-            }
-        } else {
-            //BallFeederServo.setPower(0);
-            ServoHelper.setPower(0);
-        }
 
         IntakeMotor.setPower(intake);
         StopIntakeMotor.setPower(StopIntake);
-
-        //ball feeder
-
-        if (!gamepad2.right_bumper && gamepad2.right_trigger > 0 && Math.abs(GoalShooterMotorTPS - shooterTPS) <= ToleranceForShooting){//(Math.abs(GoalShooterMotorTPS - shooterTPS) <= ToleranceForShooting)
-            BallFeederServo.setPower(-gamepad2.right_trigger); }
-        else if (gamepad2.right_bumper && gamepad2.right_trigger > 0) {
-            BallFeederServo.setPower(gamepad2.right_trigger);
-        } else if (gamepad2.back) {
-            BallFeederServo.setPower(-1);
-        }
-        else{
-            BallFeederServo.setPower(0);
-        }
+        BallFeederServo.setPower(roller);
 
     }
 
@@ -465,20 +441,6 @@ public class CleanTeleop extends LinearOpMode {
 
         // Initialize shooterAngle with the servo's current position to start.
         // This ensures it always has a value.
-
-        if (gamepad2.a || gamepad2.b) {
-            if (gamepad2.a && HoodAngle < 1) {
-                HoodAngle += .02;
-            } else if (gamepad2.b && HoodAngle > 0) {
-                HoodAngle -= .02;
-            }
-            ShooterAngle = Range.scale(
-                    HoodAngle,   // value you want to map
-                    0, 1,        // input range
-                    startPoint,  // output start
-                    endPoint     // output end
-            );
-        }
 
         ServoShooter1.setPosition(ShooterAngle);
         ServoShooter2.setPosition(ShooterAngle);

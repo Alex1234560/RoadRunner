@@ -47,7 +47,6 @@ import com.qualcomm.robotcore.util.Range;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 
 import java.util.ArrayList;
-import java.util.Collections;
 
 @Config
 @TeleOp
@@ -55,7 +54,6 @@ import java.util.Collections;
 public class CleanTeleop extends LinearOpMode {
 
     // Setting up drivetrain file
-
 
     //setting up shooter servo stuff
     private Servo ServoShooter1;
@@ -74,51 +72,43 @@ public class CleanTeleop extends LinearOpMode {
     private Servo ShooterRotatorServo = null;
     private IMU imu;
 
+    //classes
+    //Vision !!!
+    private double startingAngleRad = Math.toRadians(0);
+    private AprilTagVision vision;
+    private MecanumDrive drive;
+    private FunctionsAndValues FAndV;
+
+
     public static boolean fieldCentricDrive = true;
 
     // angle for hooded shooter
     double HoodAngle = 0;// value from 0 to 1.0
 
-    //shooter rotatr
-    /*public static double SlowAmountOfMovement = 0.0025;
-    public static double FastAmountOfMovement = 0.007;
-    public static double AmountOfMovement = 0.0025;*/
-
     //starting angle
-    private double startingAngleRad = Math.toRadians(0);
+
 
     //april tag stuff
     private double AprilTagBearing = 0;
-    public static double AprilTagIdTeam = 20;//20 blue | 24 red
-    private double rotationTolerance = 1.5;
-    public static double rotationCompensation = -.09;
+
     //private boolean SelfAimToggle = true;
     public static double currentAngle = 90;
-
 
     //Variables for statement printing
     private static double ShooterMotorSpeed = 0;
     public static double GoalShooterMotorTPS = 1200;// rotation ticks per seond
-    //variables belof for testing
-//    public static double SpeedFast = 0.01;
-//    public static double SpeedNormal = 0.001;
-    public static double SpeedPrecise = 0.0005;
-//    public static double BigRange = 300;
-//    public static double MediumRange = 100;
-    public static double SmallRange = 40;
-
-    //(1100,.47),(1600,.675), (2100, .877), (2360,1)
 
     public static double ToleranceForShooting = 40;
     //variables avobe for testing
-    double shooterTPS = 0; // Ticks per second
-
-
+    public double shooterTPS = 0; // Ticks per second
     public double range = 0;
 
     // --- Button Variables For Shooter ---
     private boolean shooterMotorOn = false;      // Tracks if the motor should be on or off
-    ArrayList<Double> LastValuesList = new ArrayList<>();
+
+    //declaring button globally
+    private boolean autoAimButton = false;
+
 
 
 // ---------------------------------------
@@ -126,284 +116,108 @@ public class CleanTeleop extends LinearOpMode {
     @Override
     public void runOpMode() {
         InitializeIMU();
-        IntakeMotor = hardwareMap.get(DcMotorEx.class, "INTAKE");
-        StopIntakeMotor = hardwareMap.get(DcMotor.class, "StopIntake");
-        ShooterMotor = hardwareMap.get(DcMotorEx.class, "Shooter");
-        ShooterMotor2 = hardwareMap.get(DcMotorEx.class, "Shooter2");
-        BallFeederServo = hardwareMap.get(CRServo.class, "BallFeederServo");
-        ServoHelper = hardwareMap.get(CRServo.class, "ServoHelper");
-        ShooterRotatorServo = hardwareMap.get(Servo.class, "ShooterRotatorServo");
-        ServoShooter1 = hardwareMap.get(Servo.class, "ServoShooter1");
-        ServoShooter2 = hardwareMap.get(Servo.class, "ServoShooter2");
+        // --- ADD THE INITIALIZATION CODE HERE ---
+        vision = new AprilTagVision(hardwareMap, "Webcam");
+        drive = new MecanumDrive(hardwareMap, new Pose2d(0, 0, startingAngleRad));
+        FAndV = new FunctionsAndValues();
+        // ------------------------------------------
 
-        ServoShooter1.setDirection(Servo.Direction.REVERSE);
-        // run shooter with encoder
-
-        ShooterMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        ShooterMotor2.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        IntakeMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-
-        //whats supposed to be in initialize hardware
-
-        MecanumDrive drive = new MecanumDrive(hardwareMap, new Pose2d(0, 0, startingAngleRad));
-
-        //vission !!!
-        AprilTagVision vision = new AprilTagVision(hardwareMap, "Webcam"); // <-- Use your webcam name!
+        SetupHardware();
 
         // Wait for the game to start (driver presses START)
         telemetry.addData("Status", "Initialized");
         telemetry.update();
-
+        //importatn things below
         waitForStart();
         imu.resetYaw();
         runtime.reset();
 
         // run until the end of the match (driver presses STOP)
         while (opModeIsActive()) {
+            autoAimButton = gamepad2.y;
             vision.update();
-            if (vision.isTagVisible()) {
-                //telemetry.addData("ID", vision.getID());
-                if (vision.getID() == 20 || vision.getID() == 24) {
-                    telemetry.addData("GOAL TAG?: ", vision.isTagVisible());
-                    telemetry.addData("Range", "%.2f in", vision.getRange());
-                    //telemetry.addData("Yaw", "%.2f deg", vision.getYaw());
-                    //telemetry.addData("X Offset", "%.2f in", vision.getX());
-                    AprilTagBearing = vision.getBearing();
-                }
-            }
-//            } else {
-//                //telemetry.addData("ID", "None");
-//
-//                //AprilTagBearing = 0;
-//            }
-
-            //handleDriving();
-            double speed = .5;
-            //if (gamepad1.right_trigger ==1){speed = 1;}
-            speed += gamepad1.right_trigger / 2;
-
-            double axial = -gamepad1.left_stick_y * speed;
-            double lateral = gamepad1.left_stick_x * speed; // Note: pushing stick forward gives negative value
-            double yaw = gamepad1.right_stick_x * speed;
-
-            double robotHeading = imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.RADIANS);
-
-            double fieldCentricAxial = axial * Math.cos(robotHeading) - lateral * Math.sin(robotHeading);
-            double fieldCentricLateral = axial * Math.sin(robotHeading) + lateral * Math.cos(robotHeading);
-
-            if (gamepad1.x && gamepad1.b) {
-                imu.resetYaw();
-            }
-
-            if (gamepad1.xWasPressed()){
-                fieldCentricDrive = !fieldCentricDrive;
-            }
-
-            if (fieldCentricDrive) {
-                drive.setDrivePowers(new PoseVelocity2d(
-                        new Vector2d(fieldCentricAxial, -fieldCentricLateral), -yaw));
-            }
-
-            /**/ // this is for field centric
-
-            //robotDrive.move(axial, lateral, yaw, speed);
-            if (!fieldCentricDrive) {
-                drive.setDrivePowers(new PoseVelocity2d(
-                        new Vector2d(axial, -lateral), -yaw));
-            }
-            telemetry.addData("FieldCentricDrive?: ", fieldCentricDrive);
-            /*drive.setDrivePowers(new PoseVelocity2d(
-                    new Vector2d(fieldCentricAxial,fieldCentricLateral),-yaw)); */ // this is for field centric
-
-            // whats supposed to be in handle driving ^^
-
+            updateBearing();
+            handleDriving();
             handleIntake();
-            handleShooter();
             handleShooterServos();
-            handleShooterRotation(AprilTagBearing, vision.isTagVisible());
+            handleFlywheel();
+            handleShooterRotation();
+            SpeedAndAngleAutoAimUpdate();
+            TelemetryStatements();
 
-
-            if (vision.isTagVisible()) {
-                range = vision.getRange();
-            }
-
-            handleShootingRanges(range,vision.isTagVisible());
-
-            //telemetry.addData("Status", "Run Time: " + runtime.toString());
-            Pose2d pose = drive.localizer.getPose();
-            //telemetry.addData("Heading ( Encoders prob )= ", Math.toDegrees(pose.heading.toDouble()));
-            //telemetry.addData("Heading ( IMU )= ", Math.toDegrees(robotHeading));
-
-            telemetry.addData("GoalShooterPower= ", GoalShooterMotorTPS);
-            boolean stabilized;
-            if (Math.abs(shooterTPS - GoalShooterMotorTPS) <= ToleranceForShooting) {
-                stabilized = true;
-            } else{stabilized=false;}
-            //telemetry.addData("ShooterPower= ", ShooterMotorSpeed);
-            telemetry.addData("Stablized?: ", stabilized);
-
-
-            telemetry.addData("ShooterMotorTickPerSecond= ", shooterTPS);
-            //telemetry.addData("x,y,heading ", pose.position.x + ", " + pose.position.y + ", heading: " + pose.heading.toDouble());
-
-
-            telemetry.update();
         }
     }
 
+    private void TelemetryStatements(){
+        //telemetry.addData("Status", "Run Time: " + runtime.toString());
+        Pose2d pose = drive.localizer.getPose();
+        //telemetry.addData("Heading ( Encoders prob )= ", Math.toDegrees(pose.heading.toDouble()));
+        //telemetry.addData("Heading ( IMU )= ", Math.toDegrees(robotHeading));
 
-    private void handleShootingRanges(double range,boolean tagBool) {
-
-        if (gamepad2.y) {
-
-            //int[] turretGoals = new int[2]; // angle then ticks per second
-
-            double targAngle = (0.00458093 * range) + 0.340541;
-            double targSpeed = (3.90841 * range) + 1409.28811;
-
-            ShooterAngle = targAngle;
-            GoalShooterMotorTPS = targSpeed;
-
-            telemetry.addData("ThingsBeingAdjusted ", ShooterAngle );
-
-        }
-
-        if (gamepad2.left_bumper) {
-            currentAngle = 90;
-            GoalShooterMotorTPS = 1450;
-            ShooterAngle = .35;
-        }
-
+        telemetry.addData("GoalShooterPower= ", GoalShooterMotorTPS);
+        boolean stabilized;
+        if (Math.abs(shooterTPS - GoalShooterMotorTPS) <= ToleranceForShooting) {
+            stabilized = true;
+        } else{stabilized=false;}
+        telemetry.addData("Stablized?: ", stabilized);
+        telemetry.addData("ShooterMotorTickPerSecond= ", shooterTPS);
+        telemetry.update();
     }
 
-    private void InitializeIMU() {
-        // Drivetrain & IMU
-        imu = hardwareMap.get(IMU.class, "imu");
+    private void handleShooterRotation(){
+        //this function will return current value unless able to adjust it, with autoaim and autoaim activated
+        double[] ShooterRotatorServoAngle = FAndV.calculateShooterRotation(AprilTagBearing,autoAimButton,currentAngle);
+        ShooterRotatorServo.setPosition(ShooterRotatorServoAngle[0]);
+        currentAngle = ShooterRotatorServoAngle[1];
 
-        // Configure the IMU. This is critical for field-centric drive.
-        IMU.Parameters parameters = new IMU.Parameters(new RevHubOrientationOnRobot(
-                RevHubOrientationOnRobot.LogoFacingDirection.RIGHT,
-                RevHubOrientationOnRobot.UsbFacingDirection.BACKWARD));
-        imu.initialize(parameters);
-
+        if (gamepad2.dpad_left && currentAngle < 180) {currentAngle += 2;}
+        if (gamepad2.dpad_right && currentAngle > 0) {currentAngle -= 2;}
     }
 
-    //note to self need to change this to speed based, not power based.
-    private void handleShooter() {
+    private void SpeedAndAngleAutoAimUpdate(){
+        if (vision.isTagVisible()) {
+            range = vision.getRange();
+        }
+
+        if (autoAimButton){
+            double[] shooterGoals = FAndV.handleShootingRanges(range);
+            ShooterAngle = shooterGoals[0];
+            GoalShooterMotorTPS = shooterGoals[1];
+
+        }
+    }
+
+    private void handleFlywheel(){
+
         shooterTPS = -ShooterMotor.getVelocity(); // Ticks per second
 
-        // 2. Check if the button was JUST pressed (it was up, but is now down)
-        if (gamepad2.xWasPressed()) {//(isXPressed && !wasXButtonPressed) {
-            // Flip the state: if it was on, turn it off; if it was off, turn it on.
-            shooterMotorOn = !shooterMotorOn;
+    //flywheel stuff.
 
-
-            ShooterMotorSpeed = calculateSpeedForShooter(GoalShooterMotorTPS);
-        }
-
-// Check if D-pad down was JUST pressed (rising edge detection)
-        if (gamepad2.dpadDownWasPressed() && GoalShooterMotorTPS > 1100) {
-            GoalShooterMotorTPS -= 50;
-            ShooterMotorSpeed = calculateSpeedForShooter(GoalShooterMotorTPS);
-        }
-// Check if D-pad up was JUST pressed
-        else if (gamepad2.dpadUpWasPressed() && GoalShooterMotorTPS < 2400) {
-            GoalShooterMotorTPS += 50;
-            ShooterMotorSpeed = calculateSpeedForShooter(GoalShooterMotorTPS);
-
-        }
-        double incrementAmount = SpeedPrecise;//test
-//        double incrementAmount = SpeedFast;
-//        if (Math.abs(shooterTPS - GoalShooterMotorTPS) <= BigRange){
-//            incrementAmount = SpeedNormal;
-//        }
-//        if (Math.abs(shooterTPS - GoalShooterMotorTPS) <= MediumRange){
-//            incrementAmount = SpeedPrecise;
-//        }
-        if (Math.abs(shooterTPS - GoalShooterMotorTPS) <= SmallRange){
-            incrementAmount = 0;
-        }
-
-
-        if (shooterMotorOn) {
-
-            if (shooterTPS < GoalShooterMotorTPS) {
-                ShooterMotorSpeed += incrementAmount;
-            }
-            if (shooterTPS > GoalShooterMotorTPS) {
-                ShooterMotorSpeed -= incrementAmount;
-            }
-
-            ShooterMotor.setPower(-1 * ShooterMotorSpeed);
-            ShooterMotor2.setPower(ShooterMotorSpeed);
-
-        } else {
-            ShooterMotor.setPower(0);
-            ShooterMotor2.setPower(0);
-            ShooterMotorSpeed = 0;
-        }
-
-        //telemetry.addData("incrementAMount ", incrementAmount);
-        //stabilizing values to know when to shoot
-        /*
-        LastValuesList.add(shooterTPS);
-        if (LastValuesList.size() > 6) {
-            LastValuesList.remove(0);
-        }
-        if (!LastValuesList.isEmpty()) {
-            // Use the Collections utility to find the min and max values directly
-            double minVal = Collections.min(LastValuesList);
-            double maxVal = Collections.max(LastValuesList);
-
-            // Calculate the range and store it
-            shooterSpeedRange = maxVal - minVal;
-        } else {
-            shooterSpeedRange = 9999999; // If the list is empty, the range is 0
-        }
-
-        //telemetry.addData("ShooterSpeedRangeForStabilizing", shooterSpeedRange );
-        */
-
+    if (gamepad2.xWasPressed()) {//(isXPressed && !wasXButtonPressed) {
+        // Flip the state: if it was on, turn it off; if it was off, turn it on.
+        shooterMotorOn = !shooterMotorOn;
+        ShooterMotorSpeed = FAndV.ReCalibrateShooterSpeed(GoalShooterMotorTPS);
+    }
+    if (gamepad2.dpadDownWasPressed() && GoalShooterMotorTPS > 1100) {
+        GoalShooterMotorTPS -= 50;
+        ShooterMotorSpeed = FAndV.calculateSpeedForShooter(GoalShooterMotorTPS);
+    }
+    else if (gamepad2.dpadUpWasPressed() && GoalShooterMotorTPS < 2400) {
+        GoalShooterMotorTPS += 50;
+        ShooterMotorSpeed = FAndV.calculateSpeedForShooter(GoalShooterMotorTPS);
 
     }
 
-    //note to self error occuring in handleShooterRotation idk why. ( i think its solved now )
-    private void handleShooterRotation(double bearing, boolean tagBool) {
-
-
-        if (gamepad2.dpad_left && currentAngle < 180) {
-            currentAngle += 2;
-        }
-        if (gamepad2.dpad_right && currentAngle > 0) {
-            currentAngle -= 2;
-        }
-
-        if (Math.abs(bearing) > rotationTolerance && Math.abs(bearing) < 30 && gamepad2.y) {
-            //currentAngle = 90;
-
-            currentAngle -= bearing * rotationCompensation;
-
-            currentAngle = Math.min(180, Math.max(0, currentAngle));
-        }
-
-        double ShooterRotationAngle = Range.scale(
-                currentAngle,   // value you want to map
-                0, 180,        // input range
-                0,  // output start
-                1     // output end
-        );
-
-        ShooterRotatorServo.setPosition(ShooterRotationAngle);
-
-        //telemetry.addData("current angle", currentAngle);
-        //telemetry.addData("bearing", bearing);
-
-
+    ShooterMotorSpeed = FAndV.handleShooter(shooterTPS,ShooterMotorSpeed,shooterMotorOn,GoalShooterMotorTPS);
+    ShooterMotor.setPower(ShooterMotorSpeed);
+    ShooterMotor2.setPower(ShooterMotorSpeed);
     }
 
     private void handleIntake() {
         //double intakeVelocity = IntakeMotor.getVelocity(); // Ticks per second
         double TriggerValue = 0;
+
+        //for both controllers being able to control speed of intake
 
         if (gamepad2.left_trigger > gamepad1.left_trigger) {
             TriggerValue = gamepad2.left_trigger;
@@ -461,6 +275,44 @@ public class CleanTeleop extends LinearOpMode {
 
     }
 
+    private void handleDriving() {
+        double speed = .5;
+        //if (gamepad1.right_trigger ==1){speed = 1;}
+        speed += gamepad1.right_trigger / 2;
+
+        double axial = -gamepad1.left_stick_y * speed;
+        double lateral = gamepad1.left_stick_x * speed; // Note: pushing stick forward gives negative value
+        double yaw = gamepad1.right_stick_x * speed;
+
+        double robotHeading = imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.RADIANS);
+
+        double fieldCentricAxial = axial * Math.cos(robotHeading) - lateral * Math.sin(robotHeading);
+        double fieldCentricLateral = axial * Math.sin(robotHeading) + lateral * Math.cos(robotHeading);
+
+        if (gamepad1.x && gamepad1.b) {
+            imu.resetYaw();
+        }
+
+        if (gamepad1.xWasPressed()) {
+            fieldCentricDrive = !fieldCentricDrive;
+        }
+
+        if (fieldCentricDrive) {
+            drive.setDrivePowers(new PoseVelocity2d(
+                    new Vector2d(fieldCentricAxial, -fieldCentricLateral), -yaw));
+        }
+
+        /**/ // this is for field centric
+
+        //robotDrive.move(axial, lateral, yaw, speed);
+        if (!fieldCentricDrive) {
+            drive.setDrivePowers(new PoseVelocity2d(
+                    new Vector2d(axial, -lateral), -yaw));
+        }
+        telemetry.addData("FieldCentricDrive?: ", fieldCentricDrive);
+
+    }
+
     private void handleShooterServos() {
 
         // Initialize shooterAngle with the servo's current position to start.
@@ -487,12 +339,48 @@ public class CleanTeleop extends LinearOpMode {
 
     }
 
-
-    // --- NEW helper: maps GoalTPS → motor power ---
-    private double calculateSpeedForShooter(double GoalTPS) {
-        // tweak these numbers if you need to recalibrate
-        double MotorSpeed = 0.000417188 * GoalTPS + 0.00873318;
-        return MotorSpeed;
+    private void updateBearing(){
+        if (vision.isTagVisible()) {
+            //telemetry.addData("ID", vision.getID());
+            if (vision.getID() == 20 || vision.getID() == 24) {
+                telemetry.addData("GOAL TAG?: ", vision.isTagVisible());
+                telemetry.addData("Range", "%.2f in", vision.getRange());
+                //telemetry.addData("Yaw", "%.2f deg", vision.getYaw());
+                //telemetry.addData("X Offset", "%.2f in", vision.getX());
+                AprilTagBearing = vision.getBearing();
+            }
+        }
     }
-}
 
+    private void InitializeIMU() {
+        // Drivetrain & IMU
+        imu = hardwareMap.get(IMU.class, "imu");
+
+        // Configure the IMU. This is critical for field-centric drive.
+        IMU.Parameters parameters = new IMU.Parameters(new RevHubOrientationOnRobot(
+                RevHubOrientationOnRobot.LogoFacingDirection.RIGHT,
+                RevHubOrientationOnRobot.UsbFacingDirection.BACKWARD));
+        imu.initialize(parameters);
+
+    }
+
+    private void SetupHardware(){
+        IntakeMotor = hardwareMap.get(DcMotorEx.class, "INTAKE");
+        StopIntakeMotor = hardwareMap.get(DcMotor.class, "StopIntake");
+        ShooterMotor = hardwareMap.get(DcMotorEx.class, "Shooter");
+        ShooterMotor2 = hardwareMap.get(DcMotorEx.class, "Shooter2");
+        BallFeederServo = hardwareMap.get(CRServo.class, "BallFeederServo");
+        ServoHelper = hardwareMap.get(CRServo.class, "ServoHelper");
+        ShooterRotatorServo = hardwareMap.get(Servo.class, "ShooterRotatorServo");
+        ServoShooter1 = hardwareMap.get(Servo.class, "ServoShooter1");
+        ServoShooter2 = hardwareMap.get(Servo.class, "ServoShooter2");
+        //directions
+        ServoShooter1.setDirection(Servo.Direction.REVERSE);
+        ShooterMotor.setDirection(DcMotorEx.Direction.REVERSE);
+        // run shooter with encoder
+        ShooterMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        ShooterMotor2.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        IntakeMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+    }
+
+  }

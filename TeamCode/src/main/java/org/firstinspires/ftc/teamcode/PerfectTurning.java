@@ -56,18 +56,9 @@ public class PerfectTurning extends LinearOpMode {
         // Your full action sequence
         Action trajectoryAction = drive.actionBuilder(initialPose)
 
-                .strafeTo(new Vector2d(squareSize, 0))
-                .waitSeconds(.2)
-                .strafeTo(new Vector2d(squareSize, squareSize))
-                .waitSeconds(.2)
-                .strafeTo(new Vector2d(0, squareSize))
-                .waitSeconds(.2)
-                .strafeTo(new Vector2d(0, 0))
-                .strafeTo(new Vector2d(24, 24))
+                .strafeTo(new Vector2d(0, 24))
 
-
-
-                .waitSeconds(10)
+                .waitSeconds(2)
 
 
                 .build();

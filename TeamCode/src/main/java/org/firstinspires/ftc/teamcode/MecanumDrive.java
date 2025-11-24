@@ -66,7 +66,7 @@ public final class MecanumDrive {
 
         // drive model parameters
         public double inPerTick = 0.024169;// inches per tick 75.25 in /3142.5 ticks
-        public double lateralInPerTick = 0.0215;// new <, measured >0.025; // 52.25 in / 2093.75 ticks
+        public double lateralInPerTick = 0.0195;// new <, measured >0.025; // 52.25 in / 2093.75 ticks
         public double trackWidthTicks = 535; // I ADDED THE /2 to fix rotation
 
         // feedforward parameters (in tick units)
@@ -87,7 +87,7 @@ public final class MecanumDrive {
         // path controller gains
         public double axialGain = 4;//1.0;
         public double lateralGain = 6;//1.0;
-        public double headingGain = 2.0; // shared with turn
+        public double headingGain = 14.0; // shared with turn
 
         public double axialVelGain = 0.0;
         public double lateralVelGain = 0;

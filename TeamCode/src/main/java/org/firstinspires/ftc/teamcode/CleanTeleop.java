@@ -52,10 +52,7 @@ import java.util.ArrayList;
 @TeleOp
 
 public class CleanTeleop extends LinearOpMode {
-
-    // Setting up drivetrain file
-
-    //setting up shooter servo stuff
+    // Hardware Setup Variables
     private Servo ServoShooter1;
     private Servo ServoShooter2;
     public static double startPoint = .30;
@@ -79,14 +76,10 @@ public class CleanTeleop extends LinearOpMode {
     private MecanumDrive drive;
     private FunctionsAndValues FAndV;
 
-
     public static boolean fieldCentricDrive = true;
 
     // angle for hooded shooter
     double HoodAngle = 0;// value from 0 to 1.0
-
-    //starting angle
-
 
     //april tag stuff
     private double AprilTagBearing = 0;
@@ -96,9 +89,8 @@ public class CleanTeleop extends LinearOpMode {
 
     //Variables for statement printing
     private static double ShooterMotorSpeed = 0;
-    public static double GoalShooterMotorTPS = 1200;// rotation ticks per seond
+    private static double GoalShooterMotorTPS = 1200;// rotation ticks per seond
 
-    public static double ToleranceForShooting = 40;
     //variables avobe for testing
     public double shooterTPS = 0; // Ticks per second
     public double range = 0;
@@ -109,25 +101,18 @@ public class CleanTeleop extends LinearOpMode {
     //declaring button globally
     private boolean autoAimButton = false;
 
-
-
-// ---------------------------------------
-
     @Override
     public void runOpMode() {
         InitializeIMU();
-        // --- ADD THE INITIALIZATION CODE HERE ---
+        SetupHardware();
+
         vision = new AprilTagVision(hardwareMap, "Webcam");
         drive = new MecanumDrive(hardwareMap, new Pose2d(0, 0, startingAngleRad));
         FAndV = new FunctionsAndValues();
-        // ------------------------------------------
 
-        SetupHardware();
-
-        // Wait for the game to start (driver presses START)
         telemetry.addData("Status", "Initialized");
         telemetry.update();
-        //importatn things below
+        // Wait for the game to start (driver presses START)
         waitForStart();
         imu.resetYaw();
         runtime.reset();
@@ -156,7 +141,7 @@ public class CleanTeleop extends LinearOpMode {
 
         telemetry.addData("GoalShooterPower= ", GoalShooterMotorTPS);
         boolean stabilized;
-        if (Math.abs(shooterTPS - GoalShooterMotorTPS) <= ToleranceForShooting) {
+        if (Math.abs(shooterTPS - GoalShooterMotorTPS) <= FAndV.ToleranceForShooting) {
             stabilized = true;
         } else{stabilized=false;}
         telemetry.addData("Stablized?: ", stabilized);
@@ -211,6 +196,8 @@ public class CleanTeleop extends LinearOpMode {
     ShooterMotorSpeed = FAndV.handleShooter(shooterTPS,ShooterMotorSpeed,shooterMotorOn,GoalShooterMotorTPS);
     ShooterMotor.setPower(ShooterMotorSpeed);
     ShooterMotor2.setPower(ShooterMotorSpeed);
+
+    telemetry.addData("ShooterMotorSpeed= ", ShooterMotorSpeed);
     }
 
     private void handleIntake() {
@@ -262,7 +249,7 @@ public class CleanTeleop extends LinearOpMode {
 
         //ball feeder
 
-        if (!gamepad2.right_bumper && gamepad2.right_trigger > 0 && Math.abs(GoalShooterMotorTPS - shooterTPS) <= ToleranceForShooting){//(Math.abs(GoalShooterMotorTPS - shooterTPS) <= ToleranceForShooting)
+        if (!gamepad2.right_bumper && gamepad2.right_trigger > 0 && Math.abs(GoalShooterMotorTPS - shooterTPS) <= FAndV.ToleranceForShooting){//(Math.abs(GoalShooterMotorTPS - shooterTPS) <= ToleranceForShooting)
             BallFeederServo.setPower(-gamepad2.right_trigger); }
         else if (gamepad2.right_bumper && gamepad2.right_trigger > 0) {
             BallFeederServo.setPower(gamepad2.right_trigger);

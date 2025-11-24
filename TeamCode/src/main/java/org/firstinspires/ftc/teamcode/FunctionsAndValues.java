@@ -8,6 +8,7 @@ import com.qualcomm.robotcore.util.Range;
  * easy-to-use methods for accessing detection data.
  */
 public class FunctionsAndValues {
+    public static double ToleranceForShooting = 40;
 
     public static double rotationCompensation = .09;
     public static double rotationTolerance = 1.5;

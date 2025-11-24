@@ -50,6 +50,7 @@ public class MeepMeepTesting {
                         //grab balls
                         .strafeTo(new Vector2d(StartingX+49, StartingY+(14*side)))
                         //goback
+
                         .strafeTo(new Vector2d(-35, -35))
                         .turn(Math.toRadians(-50))
                         //.strafeTo(new Vector2d(20, 40*side))

@@ -55,9 +55,8 @@ public class CleanTeleop extends LinearOpMode {
     // Hardware Setup Variables
     private Servo ServoShooter1;
     private Servo ServoShooter2;
-    public static double startPoint = .30;
-    public static double endPoint = .75;//.7
-    private static double ShooterAngle = startPoint;
+
+    private static double ShooterAngle = FunctionsAndValues.startPoint;
     //setting up motors and time
     private ElapsedTime runtime = new ElapsedTime();
     private DcMotorEx IntakeMotor = null;
@@ -314,8 +313,8 @@ public class CleanTeleop extends LinearOpMode {
             ShooterAngle = Range.scale(
                     HoodAngle,   // value you want to map
                     0, 1,        // input range
-                    startPoint,  // output start
-                    endPoint     // output end
+                    FunctionsAndValues.startPoint,  // output start
+                    FunctionsAndValues.endPoint     // output end
             );
         }
 

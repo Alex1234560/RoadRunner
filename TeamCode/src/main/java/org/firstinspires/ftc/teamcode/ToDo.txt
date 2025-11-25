@@ -1,4 +1,4 @@
 1 make good auto
 2 make button for when youre right in front
 3 seperate shooting button from StopIntake button
-4
+4 base camera aiming off of angle, and not adding a small value to reach value

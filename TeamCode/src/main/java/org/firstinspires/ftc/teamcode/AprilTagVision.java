@@ -1,5 +1,6 @@
 package org.firstinspires.ftc.teamcode; // Make sure this matches your team's package name
 
+import com.acmerobotics.dashboard.config.Config;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 
 import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
@@ -14,13 +15,23 @@ import java.util.List;
  * It simplifies OpModes by hiding the complex setup of the VisionPortal and providing
  * easy-to-use methods for accessing detection data.
  */
+
+@Config
+
+
+
+
 public class AprilTagVision {
+    public static int myExposure = 20;
+    public static int myGain = 150;
 
     private AprilTagProcessor aprilTag;
     private VisionPortal visionPortal;
 
     // Optional: A variable to hold the most recent detection to avoid calling getDetections() multiple times.
     private AprilTagDetection latestDetection = null;
+
+
 
     /**
      * The constructor for the AprilTagVision class.
@@ -46,8 +57,12 @@ public class AprilTagVision {
         // Set and enable the processor.
         builder.addProcessor(aprilTag);
 
+
+
+
         // Build the Vision Portal.
         visionPortal = builder.build();
+
     }
 
     /**
@@ -56,6 +71,7 @@ public class AprilTagVision {
      * @return The first AprilTagDetection found, or null if no tags are visible.
      */
     public AprilTagDetection update() {
+        setManualExposure(myExposure, myGain);
         List<AprilTagDetection> currentDetections = aprilTag.getDetections();
 
         if (currentDetections.size() > 0) {
@@ -66,6 +82,7 @@ public class AprilTagVision {
 
         // If no tags are found, clear the variable.
         latestDetection = null;
+
         return null;
     }
 
@@ -156,6 +173,35 @@ public class AprilTagVision {
     public void close() {
         if (visionPortal != null) {
             visionPortal.close();
+
+
         }
     }
+    /**
+     * Sets the camera's manual exposure and gain in one call.
+     * @param exposureMS The exposure time in milliseconds.
+     * @param gain The camera gain.
+     */
+    public void setManualExposure(int exposureMS, int gain) {
+        if (visionPortal.getCameraState() != VisionPortal.CameraState.STREAMING) {
+            return; // Exit the method if the camera is not ready.
+        }
+        // Stop if the Vision Portal isn't working.
+        if (visionPortal == null) {
+            return;
+        }
+
+        // Get the camera controls for exposure and gain
+        org.firstinspires.ftc.robotcore.external.hardware.camera.controls.ExposureControl exposureControl = visionPortal.getCameraControl(org.firstinspires.ftc.robotcore.external.hardware.camera.controls.ExposureControl.class);
+        org.firstinspires.ftc.robotcore.external.hardware.camera.controls.GainControl gainControl = visionPortal.getCameraControl(org.firstinspires.ftc.robotcore.external.hardware.camera.controls.GainControl.class);
+
+        // Tell the camera to use manual exposure
+        exposureControl.setMode(org.firstinspires.ftc.robotcore.external.hardware.camera.controls.ExposureControl.Mode.Manual);
+
+        // Set the exposure and gain values
+        exposureControl.setExposure((long)exposureMS, java.util.concurrent.TimeUnit.MILLISECONDS);
+        gainControl.setGain(gain);
+    }
+
 }
+

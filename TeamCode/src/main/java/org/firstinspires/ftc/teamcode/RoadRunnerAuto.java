@@ -318,6 +318,12 @@ public class RoadRunnerAuto extends LinearOpMode {
 //                        shooter.runShooter(),
 //                        intake.passABallToShooter(),
 //                        shooter.turnOffShooter()
+
+                        MoveTowardsIntakePosition.build(),
+                        intake.intakeOn(),
+                        GoForwardsToIntakeBalls.build(),
+                        intake.intakeOff(),
+                        GoToShootPos.build(),
                         new ParallelAction(
                                 shooter.runShooter(false),
                                 intake.passABallToShooter()

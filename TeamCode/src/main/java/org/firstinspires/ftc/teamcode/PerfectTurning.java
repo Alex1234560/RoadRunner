@@ -26,7 +26,8 @@ import org.firstinspires.ftc.teamcode.MecanumDrive;
 @Config
 @Autonomous(name = "PerfectTurning", group = "Autonomous")
 public class PerfectTurning extends LinearOpMode {
-    public static double squareSize = 48;
+    public static double xMovement = 0;
+    public static double yMovement = 48;
 
     private IMU imu;
 
@@ -56,7 +57,7 @@ public class PerfectTurning extends LinearOpMode {
         // Your full action sequence
         Action trajectoryAction = drive.actionBuilder(initialPose)
 
-                .strafeTo(new Vector2d(0, 24))
+                .strafeTo(new Vector2d(xMovement, yMovement))
 
                 .waitSeconds(2)
 

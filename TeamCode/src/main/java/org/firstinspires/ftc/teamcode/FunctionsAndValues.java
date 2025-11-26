@@ -11,7 +11,9 @@ import com.qualcomm.robotcore.util.Range;
 @Config
 public class FunctionsAndValues {
     public static double SpeedToleranceToStartShooting = 60;
-    public static double startPoint = .30;
+    public static double MinimumSpeed = 600;
+
+    public static double startPoint = .2;
     public static double endPoint = .75;//.7
 
     public static double rotationCompensation = .09;
@@ -75,12 +77,19 @@ public class FunctionsAndValues {
 
         double[] turretGoals = new double[2];
 
-        double targAngle = (0.00458093 * range) + 0.340541;
+        double targAngle = (0.00493055 * range) + 0.243814;
         if (targAngle<startPoint){targAngle=startPoint;}
         if (targAngle>endPoint){targAngle=endPoint;}
-        double targSpeed = (3.90841 * range) + 1409.28811;
+        double targSpeed = (6.94554 * range) + 850.3396;
         if (targSpeed<0){targAngle=0;}
         if (targAngle>1){targAngle=1;}
+
+        //normalize
+        if (targAngle>endPoint){targAngle=endPoint;}
+        if (targAngle<startPoint){targAngle=startPoint;}
+        if (targSpeed>1){targAngle=1;}
+        if (targSpeed<0){targAngle=0;}
+
 
         turretGoals[0] = targAngle;
         turretGoals[1] = targSpeed;

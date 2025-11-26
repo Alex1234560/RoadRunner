@@ -159,6 +159,7 @@ public class CleanTeleop extends LinearOpMode {
         if (currentAngle > 180) {currentAngle = 180;}
         if (currentAngle < 0) {currentAngle = 0;}
 
+        if (gamepad2.right_stick_button){currentAngle = 90;}
 
     }
 
@@ -186,7 +187,7 @@ public class CleanTeleop extends LinearOpMode {
         shooterMotorOn = !shooterMotorOn;
     }
 
-    if (gamepad2.dpadDownWasPressed() && GoalShooterMotorTPS > 1100) {
+    if (gamepad2.dpadDownWasPressed() && GoalShooterMotorTPS > FunctionsAndValues.MinimumSpeed) {
         GoalShooterMotorTPS -= 50;
     }
     else if (gamepad2.dpadUpWasPressed() && GoalShooterMotorTPS < 2400) {
@@ -202,48 +203,35 @@ public class CleanTeleop extends LinearOpMode {
     }
 
     private void handleIntake() {
-        //double intakeVelocity = IntakeMotor.getVelocity(); // Ticks per second
-        double IntakePowerValue = gamepad2.left_stick_y;
+        double IntakePowerValue = -Math.abs(gamepad2.left_stick_y);
 
-        //for both controllers being able to control speed of intake
-        /*
-        if (gamepad2.left_stick_y > gamepad1.left_trigger) {
-            IntakePowerValue = gamepad2.left_stick_y;
+        IntakeMotor.setPower(IntakePowerValue);
+        StopIntakeMotor.setPower(-IntakePowerValue);
+
+
+        // shoot if ready
+
+        if (!gamepad2.right_bumper && gamepad2.right_trigger > 0 && Math.abs(GoalShooterMotorTPS - shooterTPS) <= FunctionsAndValues.SpeedToleranceToStartShooting) {//(Math.abs(GoalShooterMotorTPS - shooterTPS) <= ToleranceForShooting)
+
+        IntakeMotor.setPower(-gamepad2.right_trigger /1.2);
+        StopIntakeMotor.setPower(gamepad2.right_trigger / 1.2);
+        BallFeederServo.setPower(-gamepad2.right_trigger);
         }
-        if (gamepad2.left_stick_y > gamepad2.left_trigger) {
-            IntakePowerValue = gamepad1.left_trigger;
+        // so u can force it to shoot if it isnt ready
+        else if (gamepad2.right_bumper&& gamepad2.right_trigger > 0) {
+            BallFeederServo.setPower(-gamepad2.right_trigger);
+            IntakeMotor.setPower(-gamepad2.right_trigger /1.2);
+            StopIntakeMotor.setPower(gamepad2.right_trigger / 1.2);
         }
-        if (gamepad2.left_stick_y == gamepad1.left_trigger) {
-            IntakePowerValue = gamepad2.left_stick_y;
-        }
-
-        if (gamepad2.left_stick_y < 0){IntakePowerValue = gamepad2.left_stick_y;}
-        */
-
-
-
-        double intake = IntakePowerValue;
-        /*if (gamepad2.right_bumper) { // to spit out balls
-            intake = IntakePowerValue;
-        } else { // to intake balls
-            intake = -IntakePowerValue;
-        }*/
-        double StopIntake = IntakePowerValue;
-
-        IntakeMotor.setPower(intake);
-        StopIntakeMotor.setPower(-StopIntake);
-
-        //ball feeder
-
-        if (!gamepad2.right_bumper && gamepad2.right_trigger > 0 && Math.abs(GoalShooterMotorTPS - shooterTPS) <= FAndV.SpeedToleranceToStartShooting){//(Math.abs(GoalShooterMotorTPS - shooterTPS) <= ToleranceForShooting)
-            BallFeederServo.setPower(-gamepad2.right_trigger); }
-        else if (gamepad2.right_bumper && gamepad2.right_trigger > 0) {
-            BallFeederServo.setPower(gamepad2.right_trigger);
+        // SPIT BALL BACK
+        else if (gamepad2.back) {
+            BallFeederServo.setPower(1);
+            IntakeMotor.setPower(.8);
+            StopIntakeMotor.setPower(-.8);
         }
 
-        if (gamepad2.back) {
-            BallFeederServo.setPower(-1);
-        }
+
+
         else{
             BallFeederServo.setPower(0);
         }

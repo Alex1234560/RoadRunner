@@ -63,7 +63,10 @@ public class AprilTagVision {
         // Build the Vision Portal.
         visionPortal = builder.build();
 
+
     }
+
+
 
     /**
      * This method should be called in every loop of your OpMode to update the detections.
@@ -71,7 +74,7 @@ public class AprilTagVision {
      * @return The first AprilTagDetection found, or null if no tags are visible.
      */
     public AprilTagDetection update() {
-        setManualExposure(myExposure, myGain);
+
         List<AprilTagDetection> currentDetections = aprilTag.getDetections();
 
         if (currentDetections.size() > 0) {

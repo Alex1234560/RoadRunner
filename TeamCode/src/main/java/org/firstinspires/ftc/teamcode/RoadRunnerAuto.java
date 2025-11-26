@@ -6,6 +6,7 @@ import androidx.annotation.NonNull;
 import com.acmerobotics.dashboard.config.Config;
 import com.acmerobotics.dashboard.telemetry.TelemetryPacket;
 import com.acmerobotics.roadrunner.Action;
+import com.acmerobotics.roadrunner.ParallelAction;
 import com.acmerobotics.roadrunner.Pose2d;
 import com.acmerobotics.roadrunner.SequentialAction;
 import com.acmerobotics.roadrunner.TrajectoryActionBuilder;
@@ -26,6 +27,9 @@ import com.qualcomm.robotcore.util.ElapsedTime;
 @Config
 @Autonomous(name = "RoadRunnerAuto", group = "Autonomous")
 public class RoadRunnerAuto extends LinearOpMode {
+    public static boolean ShootingNow = false;
+    public static boolean SpinShootingBallFeeder = false;
+    private FunctionsAndValues FAndV;
 
 
     public class Intake {
@@ -117,35 +121,22 @@ public class RoadRunnerAuto extends LinearOpMode {
                 if (!initialized) {
                     timer.reset();
 
-                    BallFeederServo.setPower(1);
-                    telemetry.addData("Ball Feeder Servo Activated  ", 1 );
+
+
                     intakeMotor.setPower(.7);
-                   telemetry.addData("IntakeMotor  ", 1 );
                     StopIntakeMotor.setPower(.7);
-                    telemetry.addData("StopIntakeMotor  ", 1 );
-                    telemetry.update();
-
-
                     initialized = true;
                 }
 
-
                 packet.put("time", timer.seconds());
                 if (timer.seconds() < duration) {
-//                    if (timer.seconds()<1.25){
-//                        BallFeederServo.setPower(.5);
-//                        telemetry.addData("Ball Feeder Servo Activated  ", 1 );
-//                        intakeMotor.setPower(.5);
-//                        telemetry.addData("IntakeMotor  ", 1 );
-//                        StopIntakeMotor.setPower(.5);
-//                    }
-
-
-
-
+                    if (SpinShootingBallFeeder){
+                        BallFeederServo.setPower(1);
+                    }
+                    else{BallFeederServo.setPower(0);}
                     return true;
                 } else {
-
+                    ShootingNow = false;
                     BallFeederServo.setPower(0);
                     intakeMotor.setPower(0);
                     StopIntakeMotor.setPower(0);
@@ -180,63 +171,54 @@ public class RoadRunnerAuto extends LinearOpMode {
             ShooterMotor2 = hardwareMap.get(DcMotorEx.class, "Shooter2");
             ShooterMotor.setDirection(DcMotorSimple.Direction.REVERSE);
             ServoShooter1.setDirection(Servo.Direction.REVERSE);
+            ShooterMotor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+            ShooterMotor2.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
 
 
         }
 
-        public class TurnOffShooter implements Action {
-            private boolean initialized = false;
-            private ElapsedTime timer; // To track time
-            private double duration = .01;   // How long to run in seconds
 
-
-            public TurnOffShooter() {
-                this.timer = new ElapsedTime(); // This creates the timer object.
-            }
-
-            @Override
-            public boolean run(@NonNull TelemetryPacket packet) {
-                if (!initialized) {
-                    timer.reset();
-                    initialized = true;
-
-
-
-                }
-                packet.put("time", timer.seconds());
-                if (timer.seconds() < duration) {
-                    return true;
-                } else {
-                    ShooterMotor.setPower(0);
-                    ShooterMotor2.setPower(0);
-                    return false;
-                }
-            }
-        }
-
-        public Action turnOffShooter() {return new TurnOffShooter();}
 
         public class RunShooter implements Action {
+
             private boolean initialized = false;
             private ElapsedTime timer; // To track time
-            private double duration = .5;   // How long to run in seconds
-            public double velocity = 1550;
-            public double tolerance = 60;
 
-            public RunShooter() {
+            private double duration = 5;   // How long to run in seconds
+
+            private double GoalTPS;
+            private double ServoAngle;
+
+            private double ShooterMotorPower=0;
+            private double shooterTPS=0;
+            private boolean far=false;
+
+            public RunShooter(boolean far) {
                 this.timer = new ElapsedTime(); // This creates the timer object.
+                this.far = far;
+
             }
 
             @Override
             public boolean run(@NonNull TelemetryPacket packet) {
                 if (!initialized) {
                     timer.reset();
+                    ShootingNow=true;
                     initialized = true;
+                    FAndV = new FunctionsAndValues();
 
-                    ShooterMotor.setPower(.62);
-                    ShooterMotor2.setPower(.62);
-                    ServoShooter1.setPosition(.33);
-                    ServoShooter2.setPosition(.33);
+                    if (this.far){
+                        //settings for far position
+                        GoalTPS=1550;
+                        ServoAngle = .6;
+                    }else{
+                        //settings for close position
+                        GoalTPS=1400;
+                        ServoAngle = .6;
+                    }
+
+                    ServoShooter1.setPosition(ServoAngle);
+                    ServoShooter2.setPosition(ServoAngle);
                     ShooterRotatorServo.setPosition(.5);
                     //values for right in front.
 //                    ShooterMotor.setPower(.6);
@@ -251,7 +233,27 @@ public class RoadRunnerAuto extends LinearOpMode {
 
 
                 packet.put("time", timer.seconds());
-                if (timer.seconds() < duration) {
+                if(ShootingNow){//(timer.seconds() < duration) {
+
+                    telemetry.addData("shooterTPS: ", shooterTPS);
+                    telemetry.addData("GoalTPS: ", GoalTPS);
+                    telemetry.addData("SpinShootingBallFeeder : ", SpinShootingBallFeeder);
+                    telemetry.addData("ShooterMotorPower : ", ShooterMotorPower);
+
+                    if (Math.abs(shooterTPS-GoalTPS)<=FunctionsAndValues.SpeedToleranceToStartShooting){SpinShootingBallFeeder=true;}
+                    else{SpinShootingBallFeeder=false;
+                        telemetry.addData("No SPinning Ball Feeder : ", "");
+                    }
+
+
+                    shooterTPS = ShooterMotor.getVelocity();
+
+                    ShooterMotorPower = FAndV.handleShooter(shooterTPS,true, GoalTPS, ShooterMotorPower);
+                    ShooterMotor.setPower(ShooterMotorPower);
+                    ShooterMotor2.setPower(ShooterMotorPower);
+
+                    telemetry.update();
+
                     return true;
                 } else {
                     return false;
@@ -259,12 +261,16 @@ public class RoadRunnerAuto extends LinearOpMode {
             }
         }
 
-        public Action runShooter() {return new RunShooter();}
+        public Action runShooter(boolean far) {return new RunShooter(far);}
 
     }
 
+
+
+
+
     @Override
-    public void runOpMode(){
+    public void runOpMode() throws InterruptedException {
         double side = -1; // -1 is blue 1 is red
         double StartingAngle = (90*side); // =128
         double StartingX = -60.5;
@@ -281,23 +287,18 @@ public class RoadRunnerAuto extends LinearOpMode {
         // actionBuilder builds from the drive steps passed to it
         Pose2d pose = drive.localizer.getPose();
         TrajectoryActionBuilder GoToShootPos = drive.actionBuilder(new Pose2d(StartingX+49,StartingY+(14*side) , Math.toRadians(StartingAngle)))
-
                 .strafeTo(new Vector2d(-35, -35))
                 .turn(Math.toRadians(-50))
-
                 ;
         TrajectoryActionBuilder GoForwardsToIntakeBalls = drive.actionBuilder(new Pose2d(StartingX+49,StartingY+(-18*side) , Math.toRadians(StartingAngle)))
                 //grab balls
                 //.strafeTo(new Vector2d(StartingX+49, ))
                 .lineToY(StartingY+(14*side))
-
                 ;
         TrajectoryActionBuilder MoveTowardsIntakePosition = drive.actionBuilder(initialPose)
                 //go to balls
                 .strafeTo(new Vector2d(StartingX, StartingY+(-18*side)))
                 .strafeTo(new Vector2d(StartingX+49, StartingY+(-18*side)))
-
-
 
                 ;
 
@@ -317,21 +318,24 @@ public class RoadRunnerAuto extends LinearOpMode {
 //                        shooter.runShooter(),
 //                        intake.passABallToShooter(),
 //                        shooter.turnOffShooter()
+                        new ParallelAction(
+                                shooter.runShooter(false),
+                                intake.passABallToShooter()
 
-                        MoveTowardsIntakePosition.build(),
+
+                        )
+                        /*MoveTowardsIntakePosition.build(),
                         intake.intakeOn(),
                         GoForwardsToIntakeBalls.build(),
                         intake.intakeOff(),
-                        GoToShootPos.build()
+                        GoToShootPos.build()*/
 
 
 
 
 
                         )
-                        /*new ParallelAction(
-                                intake.passABallToShooter(),
-                                shooter.runShooter()
+                        /*
 
                         )*/
 

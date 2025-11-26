@@ -1,5 +1,6 @@
 package org.firstinspires.ftc.teamcode; // Make sure this matches your team's package name
 
+import com.acmerobotics.dashboard.config.Config;
 import com.qualcomm.robotcore.util.Range;
 
 /**
@@ -7,15 +8,26 @@ import com.qualcomm.robotcore.util.Range;
  * It simplifies OpModes by hiding the complex setup of the VisionPortal and providing
  * easy-to-use methods for accessing detection data.
  */
+@Config
 public class FunctionsAndValues {
-    public static double ToleranceForShooting = 40;
+    public static double SpeedToleranceToStartShooting = 60;
     public static double startPoint = .30;
     public static double endPoint = .75;//.7
 
     public static double rotationCompensation = .09;
     public static double rotationTolerance = 1.5;
-    public static double SpeedPrecise = 0.0005;
-    public static double SmallRange = 40;
+
+
+    public static double kP = 0.005;
+    public static double kI = 0;
+    public static double kD = 0;
+
+    SimplePIDF flywheelPIDF = new SimplePIDF(
+            kP,  // kP  (start small)
+            kI,     // kI  (usually 0)
+            kD     // kD  (often 0)
+    );
+    //public static double SpeedMultiplierChange = .0001;
 
     public FunctionsAndValues() {
 
@@ -24,33 +36,7 @@ public class FunctionsAndValues {
     public double ReCalibrateShooterSpeed(double GoalTPS) {
         return calculateSpeedForShooter(GoalTPS);
     }
-    public double handleShooter(double shooterTPS, double ShooterMotorSpeed, boolean isMotorOn, double GoalSpeedTPS) {
 
-
-        double NewShooterMotorSpeed = ShooterMotorSpeed;
-
-        double incrementAmount = SpeedPrecise;//test
-        if (Math.abs(shooterTPS - GoalSpeedTPS) <= SmallRange){
-            incrementAmount = 0;
-        }
-
-
-        if (isMotorOn) {
-
-            if (shooterTPS < GoalSpeedTPS) {
-                ShooterMotorSpeed += incrementAmount;
-            }
-            else if (shooterTPS > GoalSpeedTPS) {
-                ShooterMotorSpeed -= incrementAmount;
-            }
-
-        } else {
-            NewShooterMotorSpeed = 0;
-        }
-
-        return NewShooterMotorSpeed;
-
-    }
     public double[] calculateShooterRotation(double bearing, boolean autorotate, double currentAngle) {
 
         double[] ValuesForAngleAndCurrentAngle = new double[2];
@@ -103,10 +89,59 @@ public class FunctionsAndValues {
     //rpm to power
     public double calculateSpeedForShooter(double GoalTPS) {
         // tweak these numbers if you need to recalibrate
-        double MotorSpeed = 0.000417188 * GoalTPS + 0.00873318;
+        double MotorSpeed = 0.000415873 * GoalTPS + 0.0117401;
         return MotorSpeed;
     }
 
+    public class SimplePIDF {
+        public double kP, kI, kD;
+
+        private double integral = 0;
+        private double lastError = 0;
+
+        public SimplePIDF(double kP, double kI, double kD) {
+            this.kP = kP;
+            this.kI = kI;
+            this.kD = kD;
+
+        }
+
+        public double calculate(double target, double current) {
+            double error = target - current;
+
+            // P
+            double p = kP * error;
+
+            // I
+            integral += error;
+            double i = kI * integral;
+
+            // D
+            double d = kD * (error - lastError);
+            lastError = error;
+
+            // F
+            double f =0.000415873 * target + 0.0117401;  // feedforward based on target RPM
+
+            return p + i + d + f;
+        }
     }
+
+    public double handleShooter(double shooterTPS, boolean isMotorOn, double GoalSpeedTPS, double currentPower) {
+        double newPower = flywheelPIDF.calculate(GoalSpeedTPS,shooterTPS);
+
+        //if (Math.abs(GoalSpeedTPS-shooterTPS)<ToleranceForShooting){newPower=currentPower;}
+        if (!isMotorOn){newPower=0;}
+        if (newPower>1){newPower=1;}
+        if (newPower<0){newPower=0;}
+        return newPower;
+
+    }
+
+    }
+
+
+
+
 
 

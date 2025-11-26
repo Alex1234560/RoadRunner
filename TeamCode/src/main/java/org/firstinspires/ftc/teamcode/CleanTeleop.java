@@ -46,8 +46,6 @@ import com.qualcomm.robotcore.util.Range;
 
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 
-import java.util.ArrayList;
-
 @Config
 @TeleOp
 
@@ -87,7 +85,7 @@ public class CleanTeleop extends LinearOpMode {
     public static double currentAngle = 90;
 
     //Variables for statement printing
-    private static double ShooterMotorSpeed = 0;
+    private static double ShooterMotorPower = 0;
     private static double GoalShooterMotorTPS = 1200;// rotation ticks per seond
 
     //variables avobe for testing
@@ -113,6 +111,7 @@ public class CleanTeleop extends LinearOpMode {
         telemetry.update();
         // Wait for the game to start (driver presses START)
         waitForStart();
+        vision.setManualExposure(AprilTagVision.myExposure, AprilTagVision.myGain);
         imu.resetYaw();
         runtime.reset();
 
@@ -140,7 +139,7 @@ public class CleanTeleop extends LinearOpMode {
 
         telemetry.addData("GoalShooterPower= ", GoalShooterMotorTPS);
         boolean stabilized;
-        if (Math.abs(shooterTPS - GoalShooterMotorTPS) <= FAndV.ToleranceForShooting) {
+        if (Math.abs(shooterTPS - GoalShooterMotorTPS) <= FunctionsAndValues.SpeedToleranceToStartShooting) {
             stabilized = true;
         } else{stabilized=false;}
         telemetry.addData("Stablized?: ", stabilized);
@@ -173,30 +172,27 @@ public class CleanTeleop extends LinearOpMode {
 
     private void handleFlywheel(){
 
-        shooterTPS = -ShooterMotor.getVelocity(); // Ticks per second
+        shooterTPS = Math.abs(ShooterMotor.getVelocity()); // Ticks per second
 
     //flywheel stuff.
 
     if (gamepad2.xWasPressed()) {//(isXPressed && !wasXButtonPressed) {
         // Flip the state: if it was on, turn it off; if it was off, turn it on.
         shooterMotorOn = !shooterMotorOn;
-        ShooterMotorSpeed = FAndV.ReCalibrateShooterSpeed(GoalShooterMotorTPS);
     }
     if (gamepad2.dpadDownWasPressed() && GoalShooterMotorTPS > 1100) {
         GoalShooterMotorTPS -= 50;
-        ShooterMotorSpeed = FAndV.calculateSpeedForShooter(GoalShooterMotorTPS);
     }
     else if (gamepad2.dpadUpWasPressed() && GoalShooterMotorTPS < 2400) {
         GoalShooterMotorTPS += 50;
-        ShooterMotorSpeed = FAndV.calculateSpeedForShooter(GoalShooterMotorTPS);
 
     }
 
-    ShooterMotorSpeed = FAndV.handleShooter(shooterTPS,ShooterMotorSpeed,shooterMotorOn,GoalShooterMotorTPS);
-    ShooterMotor.setPower(ShooterMotorSpeed);
-    ShooterMotor2.setPower(ShooterMotorSpeed);
+    ShooterMotorPower = FAndV.handleShooter(shooterTPS,shooterMotorOn,GoalShooterMotorTPS, ShooterMotorPower);
+    ShooterMotor.setPower(ShooterMotorPower);
+    ShooterMotor2.setPower(ShooterMotorPower);
 
-    telemetry.addData("ShooterMotorSpeed= ", ShooterMotorSpeed);
+    telemetry.addData("ShooterMotorSpeed= ", ShooterMotorPower);
     }
 
     private void handleIntake() {
@@ -248,7 +244,7 @@ public class CleanTeleop extends LinearOpMode {
 
         //ball feeder
 
-        if (!gamepad2.right_bumper && gamepad2.right_trigger > 0 && Math.abs(GoalShooterMotorTPS - shooterTPS) <= FAndV.ToleranceForShooting){//(Math.abs(GoalShooterMotorTPS - shooterTPS) <= ToleranceForShooting)
+        if (!gamepad2.right_bumper && gamepad2.right_trigger > 0 && Math.abs(GoalShooterMotorTPS - shooterTPS) <= FAndV.SpeedToleranceToStartShooting){//(Math.abs(GoalShooterMotorTPS - shooterTPS) <= ToleranceForShooting)
             BallFeederServo.setPower(-gamepad2.right_trigger); }
         else if (gamepad2.right_bumper && gamepad2.right_trigger > 0) {
             BallFeederServo.setPower(gamepad2.right_trigger);
@@ -364,8 +360,10 @@ public class CleanTeleop extends LinearOpMode {
         ServoShooter1.setDirection(Servo.Direction.REVERSE);
         ShooterMotor.setDirection(DcMotorEx.Direction.REVERSE);
         // run shooter with encoder
-        ShooterMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        ShooterMotor2.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        //ShooterMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        ShooterMotor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        //ShooterMotor2.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        ShooterMotor2.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         IntakeMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
     }
 

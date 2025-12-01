@@ -52,7 +52,8 @@ import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 public class CleanTeleop extends LinearOpMode {
     // Hardware Setup Variables
     private Servo ServoShooter1;
-    private Servo ServoShooter2;
+
+    //private Servo ServoShooter2;
 
     private static double ShooterAngle = FunctionsAndValues.startPoint;
     //setting up motors and time
@@ -62,7 +63,8 @@ public class CleanTeleop extends LinearOpMode {
     private DcMotorEx ShooterMotor = null;
     private DcMotorEx ShooterMotor2 = null;
     private CRServo BallFeederServo = null;
-    private CRServo ServoHelper = null;
+    private CRServo BallFeederServo2 = null;
+
     private Servo ShooterRotatorServo = null;
     private IMU imu;
 
@@ -86,7 +88,7 @@ public class CleanTeleop extends LinearOpMode {
 
     //Variables for statement printing
     private static double ShooterMotorPower = 0;
-    private static double GoalShooterMotorTPS = 1200;// rotation ticks per seond
+    public static double GoalShooterMotorTPS = 1200;// rotation ticks per seond
 
     //variables avobe for testing
     public double shooterTPS = 0; // Ticks per second
@@ -96,7 +98,8 @@ public class CleanTeleop extends LinearOpMode {
     private boolean shooterMotorOn = false;      // Tracks if the motor should be on or off
 
     //declaring button globally
-    private boolean autoAimButton = false;
+    //private boolean autoAimButton = false;
+    public static boolean autoAimButton = false;
 
     @Override
     public void runOpMode() {
@@ -117,7 +120,10 @@ public class CleanTeleop extends LinearOpMode {
 
         // run until the end of the match (driver presses STOP)
         while (opModeIsActive()) {
-            autoAimButton = gamepad2.y;
+            if (gamepad2.yWasPressed()) {
+                autoAimButton = !autoAimButton;
+            }
+
             vision.update();
             updateBearing();
             handleDriving();
@@ -133,7 +139,9 @@ public class CleanTeleop extends LinearOpMode {
 
     private void TelemetryStatements(){
         //telemetry.addData("Status", "Run Time: " + runtime.toString());
+        drive.updatePoseEstimate();
         Pose2d pose = drive.localizer.getPose();
+
         //telemetry.addData("Heading ( Encoders prob )= ", Math.toDegrees(pose.heading.toDouble()));
         //telemetry.addData("Heading ( IMU )= ", Math.toDegrees(robotHeading));
 
@@ -144,14 +152,23 @@ public class CleanTeleop extends LinearOpMode {
         } else{stabilized=false;}
         telemetry.addData("Stablized?: ", stabilized);
         telemetry.addData("ShooterMotorTickPerSecond= ", shooterTPS);
+
+        telemetry.addData("X= ", pose.position.x);
+        telemetry.addData("Y= ", pose.position.y);
+
+
+
+
+
         telemetry.update();
     }
 
     private void handleShooterRotation(){
         //this function will return current value unless able to adjust it, with autoaim and autoaim activated
-        double[] ShooterRotatorServoAngle = FAndV.calculateShooterRotation(AprilTagBearing,autoAimButton,currentAngle);
+        double[] ShooterRotatorServoAngle = FAndV.calculateShooterRotation(AprilTagBearing,autoAimButton,currentAngle,false);
         ShooterRotatorServo.setPosition(ShooterRotatorServoAngle[0]);
         currentAngle = ShooterRotatorServoAngle[1];
+        AprilTagBearing = ShooterRotatorServoAngle[2];
 
         //if (gamepad2.dpad_left && currentAngle < 180) {currentAngle += 2;}
         //if (gamepad2.dpad_right && currentAngle > 0) {currentAngle -= 2;}
@@ -215,17 +232,19 @@ public class CleanTeleop extends LinearOpMode {
 
         IntakeMotor.setPower(-gamepad2.right_trigger /1.2);
         StopIntakeMotor.setPower(gamepad2.right_trigger / 1.2);
-        BallFeederServo.setPower(-gamepad2.right_trigger);
+        BallFeederServo.setPower(gamepad2.right_trigger);
+
+
         }
         // so u can force it to shoot if it isnt ready
         else if (gamepad2.right_bumper&& gamepad2.right_trigger > 0) {
-            BallFeederServo.setPower(-gamepad2.right_trigger);
+            BallFeederServo.setPower(gamepad2.right_trigger);
             IntakeMotor.setPower(-gamepad2.right_trigger /1.2);
             StopIntakeMotor.setPower(gamepad2.right_trigger / 1.2);
         }
         // SPIT BALL BACK
         else if (gamepad2.back) {
-            BallFeederServo.setPower(1);
+            BallFeederServo.setPower(-1);
             IntakeMotor.setPower(.8);
             StopIntakeMotor.setPower(-.8);
         }
@@ -235,6 +254,8 @@ public class CleanTeleop extends LinearOpMode {
         else{
             BallFeederServo.setPower(0);
         }
+
+        BallFeederServo2.setPower(BallFeederServo.getPower());
     }
 
     private void handleDriving() {
@@ -295,7 +316,7 @@ public class CleanTeleop extends LinearOpMode {
         }
 
         ServoShooter1.setPosition(ShooterAngle);
-        ServoShooter2.setPosition(ShooterAngle);
+        //ServoShooter2.setPosition(ShooterAngle);
         //telemetry.addData("ActualVAlueHood ", HoodAngle );
         telemetry.addData("ServoAngle ", ShooterAngle );
 
@@ -312,6 +333,7 @@ public class CleanTeleop extends LinearOpMode {
                 AprilTagBearing = vision.getBearing();
             }
         }
+        telemetry.addData("Bearing", "%.2f Deg", AprilTagBearing);
     }
 
     private void InitializeIMU() {
@@ -332,12 +354,13 @@ public class CleanTeleop extends LinearOpMode {
         ShooterMotor = hardwareMap.get(DcMotorEx.class, "Shooter");
         ShooterMotor2 = hardwareMap.get(DcMotorEx.class, "Shooter2");
         BallFeederServo = hardwareMap.get(CRServo.class, "BallFeederServo");
-        ServoHelper = hardwareMap.get(CRServo.class, "ServoHelper");
+        BallFeederServo2 = hardwareMap.get(CRServo.class, "BallFeederServo2");
         ShooterRotatorServo = hardwareMap.get(Servo.class, "ShooterRotatorServo");
         ServoShooter1 = hardwareMap.get(Servo.class, "ServoShooter1");
-        ServoShooter2 = hardwareMap.get(Servo.class, "ServoShooter2");
+
         //directions
-        ServoShooter1.setDirection(Servo.Direction.REVERSE);
+        BallFeederServo2.setDirection(CRServo.Direction.REVERSE);
+        //ServoShooter1.setDirection(Servo.Direction.REVERSE);
         ShooterMotor.setDirection(DcMotorEx.Direction.REVERSE);
         // run shooter with encoder
         //ShooterMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);

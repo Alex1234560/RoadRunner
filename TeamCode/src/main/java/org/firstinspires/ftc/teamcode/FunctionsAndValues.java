@@ -13,11 +13,14 @@ public class FunctionsAndValues {
     public static double SpeedToleranceToStartShooting = 60;
     public static double MinimumSpeed = 600;
 
-    public static double startPoint = .2;
-    public static double endPoint = .75;//.7
+    public static double startPoint = .15;
+    public static double endPoint = .9;//.7
 
-    public static double rotationCompensation = .09;
-    public static double rotationTolerance = 1.5;
+
+    //public static double rotationTolerance = .5;
+
+
+    public static double GearRatio = 3;
 
 
     public static double kP = 0.005;
@@ -39,15 +42,28 @@ public class FunctionsAndValues {
         return calculateSpeedForShooter(GoalTPS);
     }
 
-    public double[] calculateShooterRotation(double bearing, boolean autorotate, double currentAngle) {
+    public double[] calculateShooterRotation(double bearing, boolean autorotate, double currentAngle, boolean auto) {
+        double rotationCompensation = 0;
+        if (auto){
+            rotationCompensation = .1;
+        }
+        else{
+            rotationCompensation = .5;
+        }
 
-        double[] ValuesForAngleAndCurrentAngle = new double[2];
+        double[] ValuesForAngleAndCurrentAngleAndNewBearing = new double[3];
 
         double newCurrentAngle = currentAngle;
+        double newBearing = bearing;
 
-        if (Math.abs(bearing) > rotationTolerance && Math.abs(bearing) < 30 && autorotate) {
+        if ( Math.abs(bearing) <= 30 && autorotate) {
 
-            newCurrentAngle += bearing * rotationCompensation;
+
+
+            newCurrentAngle += (bearing/GearRatio) * rotationCompensation;
+            newBearing -= bearing * rotationCompensation;
+
+
 
             newCurrentAngle = Math.min(180, Math.max(0, newCurrentAngle));
         }
@@ -61,34 +77,57 @@ public class FunctionsAndValues {
                 1     // output end
         );
 
-        ValuesForAngleAndCurrentAngle[0] = valueForShooterServo;
-        ValuesForAngleAndCurrentAngle[1] = newCurrentAngle;
+        ValuesForAngleAndCurrentAngleAndNewBearing[0] = valueForShooterServo;
+        ValuesForAngleAndCurrentAngleAndNewBearing[1] = newCurrentAngle;
+        ValuesForAngleAndCurrentAngleAndNewBearing[2] = newBearing;
 
-        return ValuesForAngleAndCurrentAngle;
-
-
-        //telemetry.addData("current angle", currentAngle);
-        //telemetry.addData("bearing", bearing);
-
-
+        return ValuesForAngleAndCurrentAngleAndNewBearing;
     }
+
+    /*public double[] calculateShooterRotation(double bearing, boolean autorotate, double currentAngle) {
+
+        double[] ValuesForAngleAndCurrentAngleAndNewBearing = new double[3];
+
+        double newCurrentAngle = currentAngle;
+        double newBearing = bearing;
+
+        if (Math.abs(bearing) > rotationTolerance && Math.abs(bearing) <= 30 && autorotate) {
+
+            newCurrentAngle += bearing * rotationCompensation;
+            //newBearing += (bearing * rotationCompensation)*GearRatio;
+
+            newCurrentAngle = Math.min(180, Math.max(0, newCurrentAngle));
+        }
+
+
+        //returning value that is mapped from degrees to 0-1.
+        double valueForShooterServo = Range.scale(
+                newCurrentAngle,   // value you want to map
+                0, 180,        // input range
+                0,  // output start
+                1     // output end
+        );
+
+        ValuesForAngleAndCurrentAngleAndNewBearing[0] = valueForShooterServo;
+        ValuesForAngleAndCurrentAngleAndNewBearing[1] = newCurrentAngle;
+        ValuesForAngleAndCurrentAngleAndNewBearing[2] = newBearing;
+
+        return ValuesForAngleAndCurrentAngleAndNewBearing;
+    }*/
     //range to rpm and angle
     public double[] handleShootingRanges(double range) {
 
         double[] turretGoals = new double[2];
 
-        double targAngle = (0.00493055 * range) + 0.243814;
-        if (targAngle<startPoint){targAngle=startPoint;}
-        if (targAngle>endPoint){targAngle=endPoint;}
+        //double targAngle = (0.00493055 * range) + 0.243814;
+        double targAngle = (0.00729122*range) +0.0887001;
         double targSpeed = (6.94554 * range) + 850.3396;
-        if (targSpeed<0){targAngle=0;}
-        if (targAngle>1){targAngle=1;}
 
         //normalize
         if (targAngle>endPoint){targAngle=endPoint;}
         if (targAngle<startPoint){targAngle=startPoint;}
-        if (targSpeed>1){targAngle=1;}
-        if (targSpeed<0){targAngle=0;}
+        if (targSpeed>2500){targSpeed=2500;}
+        if (targSpeed<0){targSpeed=0;}
 
 
         turretGoals[0] = targAngle;

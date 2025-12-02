@@ -66,7 +66,7 @@ public final class MecanumDrive {
 
         // drive model parameters
         public double inPerTick = 0.025;//0.024169;// inches per tick 75.25 in /3142.5 ticks
-        public double lateralInPerTick =0.0210;// 0.0195;// new <, measured >0.025; // 52.25 in / 2093.75 ticks
+        public double lateralInPerTick =0.0216;// 0.0195;// new <, measured >0.025; // 52.25 in / 2093.75 ticks
         public double trackWidthTicks = 535; // I ADDED THE /2 to fix rotation
 
         // feedforward parameters (in tick units)

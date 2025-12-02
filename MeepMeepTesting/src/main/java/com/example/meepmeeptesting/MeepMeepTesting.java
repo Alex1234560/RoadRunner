@@ -19,6 +19,16 @@ public class MeepMeepTesting {
     public static double StartingX = -60.5;
     public static double StartingY = 36.5*side;
 
+
+    static double ShootAngle = Math.toRadians( (50+180)*side ); // not sure if it works on other side ( 1 )
+
+
+    static  Pose2d initialPose = new Pose2d(StartingX, StartingY, Math.toRadians(StartingAngle));//(0, 0, Math.toRadians(0));
+    static Pose2d  IntakePosition1 = new Pose2d(-11.5, 18.5*side , Math.toRadians(StartingAngle));
+     static Pose2d BallsIntakenPos1 = new Pose2d(-11.5, 50.5*side , Math.toRadians(StartingAngle));
+    static Pose2d ShootPos = new Pose2d(-35, -35*side , ShootAngle); // not sure if work on both sides
+
+
     public static void main(String[] args) {
         MeepMeep meepMeep = new MeepMeep(800);
         RoadRunnerBotEntity myBot = new DefaultBotBuilder(meepMeep)
@@ -26,52 +36,12 @@ public class MeepMeepTesting {
                 .setConstraints(60, 60, Math.toRadians(180), Math.toRadians(180), 15)//track width 15
 
                 .followTrajectorySequence(drive -> drive.trajectorySequenceBuilder(new Pose2d(StartingX, StartingY, Math.toRadians(StartingAngle))) // for next to wall on shooter thing
-
-                        //.strafeTo(new Vector2d(0, squareSize))
-                        //.waitSeconds(1)
-                        //.turn(Math.toRadians(90))
-
-                                //.strafeTo(new Vector2d(40, 0))
-                        // Strafe to (50, 50) while turning to a 90-degree heading.
-                        // The last argument is the end tangent, which affects the path shape.
-                        //.strafeTo(new Vector2d(-11.1,39.1))
-
-                        //.strafeTo(new Vector2d(-11,30))
-                        // FROM:
+                        .strafeTo(new Vector2d(IntakePosition1.getX(), IntakePosition1.getY()))
 
 
 
-                        //.strafeTo(new Vector2d(-11, 25))
-                        //.turn(Math.toRadians(90))
-                        //.strafeTo(new Vector2d(10, 53))
-                        //go to balls
-                        .strafeTo(new Vector2d(StartingX, StartingY+(-18*side)))
-                        .strafeTo(new Vector2d(StartingX+49, StartingY+(-18*side)))
-                        //grab balls
+
                         .strafeTo(new Vector2d(StartingX+49, StartingY+(14*side)))
-                        //goback
-
-                        .strafeTo(new Vector2d(-35, -35))
-                        .turn(Math.toRadians(-50))
-                        //.strafeTo(new Vector2d(20, 40*side))
-
-
-                        //grab balls
-                        //.strafeTo(new Vector2d(-11, 53*side))
-
-//
-                        //  go back to before grabbing balls
-                        //.strafeTo(new Vector2d(-11, 33*side))
-                        //turn to shooting place
-
-                        //  go to shooting place
-                       // .strafeTo(new Vector2d(-62, 33*side))
-
-
-
-
-
-
 
 
 

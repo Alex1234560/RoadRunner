@@ -83,7 +83,7 @@ public class CleanTeleop extends LinearOpMode {
     //april tag stuff
     private double AprilTagBearing = 0;
 
-    //private boolean SelfAimToggle = true;
+    private boolean SelfAimToggle = true;
     public static double currentAngle = 90;
 
     //Variables for statement printing
@@ -103,6 +103,7 @@ public class CleanTeleop extends LinearOpMode {
 
     @Override
     public void runOpMode() {
+        currentAngle=90;//center current angle for shooter
         InitializeIMU();
         SetupHardware();
 
@@ -133,7 +134,7 @@ public class CleanTeleop extends LinearOpMode {
             handleShooterRotation();
             SpeedAndAngleAutoAimUpdate();
             TelemetryStatements();
-
+            //autoLock();
         }
     }
 
@@ -193,6 +194,55 @@ public class CleanTeleop extends LinearOpMode {
         }
     }
 
+    private double[] lastRangeBearing = {0.1, 0.1};
+    //private double lastRangeInertOff = 0.0;
+//private double lastRotInertOff = 0.0;
+    private double lastCheckedTime = 0.0;
+
+    private void autoLock(){
+        if (gamepad2.dpadLeftWasPressed()) {
+            SelfAimToggle = !SelfAimToggle;
+        };
+
+        if (SelfAimToggle & vision.isTagVisible()) {
+            double timeScaleVal = (100*getRuntime()) - lastCheckedTime;
+            double rangeScaleVal = timeScaleVal * 0.5;
+            double bearingScaleVal = timeScaleVal * 1;
+
+
+            lastCheckedTime = (100*getRuntime());
+            range = vision.getRange();
+
+            double rangeChange = Math.abs(range - lastRangeBearing[0]);
+            double bearingChange = Math.abs(AprilTagBearing - lastRangeBearing[1]);
+
+            double tempRange = range;
+            double tempBearing = AprilTagBearing;
+            if (rangeChange > rangeScaleVal) {
+                tempRange += (range - lastRangeBearing[0]);
+
+            }
+
+            if (bearingChange > bearingScaleVal){
+                tempBearing += AprilTagBearing - lastRangeBearing[1];
+
+            }
+
+
+            double[] ShooterRotatorServoAngle = FAndV.calculateShooterRotation(tempBearing,true, currentAngle, false);
+            ShooterRotatorServo.setPosition(ShooterRotatorServoAngle[0]);
+            currentAngle = ShooterRotatorServoAngle[1];
+
+
+            double[] shooterGoals = FAndV.handleShootingRanges(tempRange);
+            ShooterAngle = shooterGoals[0];
+            GoalShooterMotorTPS = shooterGoals[1];
+
+            lastRangeBearing[0] = range;
+            lastRangeBearing[1] = AprilTagBearing;
+        };
+    }
+
     private void handleFlywheel(){
 
         shooterTPS = Math.abs(ShooterMotor.getVelocity()); // Ticks per second
@@ -221,6 +271,9 @@ public class CleanTeleop extends LinearOpMode {
 
     private void handleIntake() {
         double IntakePowerValue = -Math.abs(gamepad2.left_stick_y);
+        if (Math.abs(gamepad1.left_trigger) > Math.abs(gamepad2.left_stick_y)){
+            IntakePowerValue = -Math.abs(gamepad1.left_trigger);
+        }
 
         IntakeMotor.setPower(IntakePowerValue);
         StopIntakeMotor.setPower(-IntakePowerValue);
@@ -361,11 +414,9 @@ public class CleanTeleop extends LinearOpMode {
         //directions
         BallFeederServo2.setDirection(CRServo.Direction.REVERSE);
         //ServoShooter1.setDirection(Servo.Direction.REVERSE);
-        ShooterMotor.setDirection(DcMotorEx.Direction.REVERSE);
+        ShooterMotor2.setDirection(DcMotorEx.Direction.REVERSE);
         // run shooter with encoder
-        //ShooterMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         ShooterMotor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-        //ShooterMotor2.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         ShooterMotor2.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         IntakeMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
     }

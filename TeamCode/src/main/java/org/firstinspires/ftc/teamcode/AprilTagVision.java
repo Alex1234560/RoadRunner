@@ -23,7 +23,7 @@ import java.util.List;
 
 public class AprilTagVision {
     public static int myExposure = 20;
-    public static int myGain = 150;
+    public static int myGain = 100;//150;
 
     private AprilTagProcessor aprilTag;
     private VisionPortal visionPortal;

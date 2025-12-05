@@ -23,10 +23,11 @@ public class MeepMeepTesting {
     static double ShootAngle = Math.toRadians( (50+180)*side ); // not sure if it works on other side ( 1 )
 
 
-    static  Pose2d initialPose = new Pose2d(StartingX, StartingY, Math.toRadians(StartingAngle));//(0, 0, Math.toRadians(0));
-    static Pose2d  IntakePosition1 = new Pose2d(-11.5, 18.5*side , Math.toRadians(StartingAngle));
-     static Pose2d BallsIntakenPos1 = new Pose2d(-11.5, 50.5*side , Math.toRadians(StartingAngle));
-    static Pose2d ShootPos = new Pose2d(-35, -35*side , ShootAngle); // not sure if work on both sides
+
+    static Pose2d initialPos = new Pose2d(StartingX, StartingY, Math.toRadians(StartingAngle));//(0, 0, Math.toRadians(0));
+    static Pose2d IntakePosition = new Pose2d(-11.5, 18.5*side , Math.toRadians(StartingAngle));
+    static Pose2d BallsIntakenPos = new Pose2d(-11.5, 46.5*side , Math.toRadians(StartingAngle));
+    static Pose2d ShootPos = new Pose2d(-35, 35*side , ShootAngle); // not sure if work on both sides
 
 
     public static void main(String[] args) {
@@ -36,12 +37,13 @@ public class MeepMeepTesting {
                 .setConstraints(60, 60, Math.toRadians(180), Math.toRadians(180), 15)//track width 15
 
                 .followTrajectorySequence(drive -> drive.trajectorySequenceBuilder(new Pose2d(StartingX, StartingY, Math.toRadians(StartingAngle))) // for next to wall on shooter thing
-                        .strafeTo(new Vector2d(IntakePosition1.getX(), IntakePosition1.getY()))
+                        .strafeTo(new Vector2d(IntakePosition.getX(), IntakePosition.getY()))
 
 
 
 
-                        .strafeTo(new Vector2d(StartingX+49, StartingY+(14*side)))
+                        .strafeTo(new Vector2d(BallsIntakenPos.getX(), BallsIntakenPos.getY()))
+                        .strafeTo(new Vector2d(ShootPos.getX(), ShootPos.getY()))
 
 
 

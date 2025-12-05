@@ -1,6 +1,10 @@
-1 Auto Spool and aim before actually getting to shoot pos to be faster.
-2 make button for when you're right in front
-3 base camera aiming off of angle, and not adding a small value to reach value
+1 Auto Spool and aim before actually getting to shoot pos to be faster, and shoot from a more efficient position
+2 Confirm button for right in front works, and make button for back
 4 make auto for back, and for other colors.
 5 add two encoders, and motor logic for handling broken encoder
 6 when theres 5 seconds left, go out of launch zone, and position yourself to be able to use field centric drive
+7 Check if aiming works in auto.
+
+LESS IMPORTANT:
+
+1 make simpler aiming code that u understand better

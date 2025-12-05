@@ -11,7 +11,10 @@ import com.qualcomm.robotcore.util.Range;
 @Config
 public class FunctionsAndValues {
     public static double SpeedToleranceToStartShooting = 60;
+    //public static double side = -1;
     public static double MinimumSpeed = 600;
+
+    public static double tuningMultiplier = 3;
 
     public static double startPoint = .15;
     public static double endPoint = .9;//.7
@@ -45,10 +48,10 @@ public class FunctionsAndValues {
     public double[] calculateShooterRotation(double bearing, boolean autorotate, double currentAngle, boolean auto) {
         double rotationCompensation = 0;
         if (auto){
-            rotationCompensation = .1;
+            rotationCompensation = .1 * tuningMultiplier;
         }
         else{
-            rotationCompensation = .5;
+            rotationCompensation = .5* tuningMultiplier;
         }
 
         double[] ValuesForAngleAndCurrentAngleAndNewBearing = new double[3];
@@ -59,11 +62,16 @@ public class FunctionsAndValues {
         if ( Math.abs(bearing) <= 30 && autorotate) {
 
 
+            double angleChangeAmount = (bearing/GearRatio) * rotationCompensation;
+            double bearingChangeAmount = bearing * rotationCompensation;
+            if (Math.abs(bearing)<3){
+                angleChangeAmount=angleChangeAmount/2;
+                bearingChangeAmount=angleChangeAmount/2;
+            }
 
-            newCurrentAngle += (bearing/GearRatio) * rotationCompensation;
-            newBearing -= bearing * rotationCompensation;
-
-
+            //newCurrentAngle += (bearing/GearRatio) * rotationCompensation;
+            newCurrentAngle +=angleChangeAmount;
+            newBearing -= bearingChangeAmount;
 
             newCurrentAngle = Math.min(180, Math.max(0, newCurrentAngle));
         }

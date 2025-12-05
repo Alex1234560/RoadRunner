@@ -75,7 +75,7 @@ public class CleanTeleop extends LinearOpMode {
     private MecanumDrive drive;
     private FunctionsAndValues FAndV;
 
-    public static boolean fieldCentricDrive = true;
+    public static boolean fieldCentricDrive = false;
 
     // angle for hooded shooter
     double HoodAngle = 0;// value from 0 to 1.0
@@ -99,7 +99,7 @@ public class CleanTeleop extends LinearOpMode {
 
     //declaring button globally
     //private boolean autoAimButton = false;
-    public static boolean autoAimButton = false;
+    public static boolean AutoAim = false;
 
     @Override
     public void runOpMode() {
@@ -121,9 +121,8 @@ public class CleanTeleop extends LinearOpMode {
 
         // run until the end of the match (driver presses STOP)
         while (opModeIsActive()) {
-            if (gamepad2.yWasPressed()) {
-                autoAimButton = !autoAimButton;
-            }
+            if (gamepad2.aWasPressed()) {AutoAim = true;}
+            if (gamepad2.bWasPressed()) {AutoAim = false;}
 
             vision.update();
             updateBearing();
@@ -134,6 +133,7 @@ public class CleanTeleop extends LinearOpMode {
             handleShooterRotation();
             SpeedAndAngleAutoAimUpdate();
             TelemetryStatements();
+            handleUserShootingRanges();
             //autoLock();
         }
     }
@@ -166,7 +166,7 @@ public class CleanTeleop extends LinearOpMode {
 
     private void handleShooterRotation(){
         //this function will return current value unless able to adjust it, with autoaim and autoaim activated
-        double[] ShooterRotatorServoAngle = FAndV.calculateShooterRotation(AprilTagBearing,autoAimButton,currentAngle,false);
+        double[] ShooterRotatorServoAngle = FAndV.calculateShooterRotation(AprilTagBearing, AutoAim,currentAngle,false);
         ShooterRotatorServo.setPosition(ShooterRotatorServoAngle[0]);
         currentAngle = ShooterRotatorServoAngle[1];
         AprilTagBearing = ShooterRotatorServoAngle[2];
@@ -186,7 +186,7 @@ public class CleanTeleop extends LinearOpMode {
             range = vision.getRange();
         }
 
-        if (autoAimButton){
+        if (AutoAim){
             double[] shooterGoals = FAndV.handleShootingRanges(range);
             ShooterAngle = shooterGoals[0];
             GoalShooterMotorTPS = shooterGoals[1];
@@ -243,6 +243,15 @@ public class CleanTeleop extends LinearOpMode {
         };
     }
 
+    private void handleUserShootingRanges(){
+        if (gamepad2.left_bumper){
+            //AutoAim = false;
+            ShooterRotatorServo.setPosition(.5);
+            GoalShooterMotorTPS = 1025;
+            ShooterAngle = .15;
+        }
+    }
+
     private void handleFlywheel(){
 
         shooterTPS = Math.abs(ShooterMotor.getVelocity()); // Ticks per second
@@ -270,8 +279,8 @@ public class CleanTeleop extends LinearOpMode {
     }
 
     private void handleIntake() {
-        double IntakePowerValue = -Math.abs(gamepad2.left_stick_y);
-        if (Math.abs(gamepad1.left_trigger) > Math.abs(gamepad2.left_stick_y)){
+        double IntakePowerValue = -Math.abs(gamepad2.left_trigger);
+        if (Math.abs(gamepad1.left_trigger) > Math.abs(gamepad2.left_trigger)){
             IntakePowerValue = -Math.abs(gamepad1.left_trigger);
         }
 
@@ -325,7 +334,7 @@ public class CleanTeleop extends LinearOpMode {
         double fieldCentricAxial = axial * Math.cos(robotHeading) - lateral * Math.sin(robotHeading);
         double fieldCentricLateral = axial * Math.sin(robotHeading) + lateral * Math.cos(robotHeading);
 
-        if (gamepad1.x && gamepad1.b) {
+        if (gamepad1.backWasPressed()) {
             imu.resetYaw();
         }
 
@@ -354,10 +363,10 @@ public class CleanTeleop extends LinearOpMode {
         // Initialize shooterAngle with the servo's current position to start.
         // This ensures it always has a value.
 
-        if (gamepad2.a || gamepad2.b) {
-            if (gamepad2.a && HoodAngle < 1) {
+        if (gamepad2.dpad_right || gamepad2.dpad_left) {
+            if (gamepad2.dpad_right && HoodAngle < 1) {
                 HoodAngle += .02;
-            } else if (gamepad2.b && HoodAngle > 0) {
+            } else if (gamepad2.dpad_left && HoodAngle > 0) {
                 HoodAngle -= .02;
             }
             ShooterAngle = Range.scale(

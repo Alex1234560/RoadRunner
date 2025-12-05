@@ -22,8 +22,8 @@ import java.util.List;
 
 
 public class AprilTagVision {
-    public static int myExposure = 20;
-    public static int myGain = 100;//150;
+    public static int myExposure = 8;//20;
+    public static int myGain = 100;//100;//150;
 
     private AprilTagProcessor aprilTag;
     private VisionPortal visionPortal;
@@ -74,6 +74,8 @@ public class AprilTagVision {
      * @return The first AprilTagDetection found, or null if no tags are visible.
      */
     public AprilTagDetection update() {
+
+        setManualExposure(myExposure,myGain);
 
         List<AprilTagDetection> currentDetections = aprilTag.getDetections();
 

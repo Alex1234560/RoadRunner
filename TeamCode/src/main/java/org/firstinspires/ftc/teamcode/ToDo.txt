@@ -1,4 +1,4 @@
-1 Spool and aim before actually getting to shoot pos to be faster.
+1 Auto Spool and aim before actually getting to shoot pos to be faster.
 2 make button for when you're right in front
 3 base camera aiming off of angle, and not adding a small value to reach value
 4 make auto for back, and for other colors.

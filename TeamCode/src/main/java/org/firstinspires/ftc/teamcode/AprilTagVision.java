@@ -103,11 +103,18 @@ public class AprilTagVision {
      * Gets the range (distance) to the last detected tag.
      * @return The range in inches, or a default value (like -1) if no tag is visible.
      */
+//    public double getRange() {
+//        if (isTagVisible()) {
+//            return latestDetection.ftcPose.range;
+//        }
+//        return -1; // Return an invalid value if no tag is seen
+//    }
     public double getRange() {
-        if (isTagVisible()) {
+        // Check if a tag is detected AND if its pose data is available
+        if (latestDetection != null && latestDetection.ftcPose != null) {
             return latestDetection.ftcPose.range;
         }
-        return -1; // Return an invalid value if no tag is seen
+        return -1; // Return an invalid/safe value if no tag or pose data is seen
     }
 
     /**
@@ -115,12 +122,13 @@ public class AprilTagVision {
      * @return The bearing in degrees, or 0 if no tag is visible.
      */
     public double getBearing() {
-        if (isTagVisible()) {
+        // Check if the detection exists AND if the pose calculation is complete.
+        if (latestDetection != null && latestDetection.ftcPose != null) {
             return latestDetection.ftcPose.bearing;
         }
-        return 0;
+        // Return a safe, invalid value if no tag or no pose data is available.
+        return 999;
     }
-
     /**
      * Gets the yaw (rotational error) of the last detected tag.
      * @return The yaw in degrees, or 0 if no tag is visible.

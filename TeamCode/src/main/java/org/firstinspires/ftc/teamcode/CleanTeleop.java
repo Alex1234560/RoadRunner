@@ -52,6 +52,7 @@ import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 public class CleanTeleop extends LinearOpMode {
     // Hardware Setup Variables
     private Servo ServoShooter1;
+    private Servo ReadyToShootServo;
 
     //private Servo ServoShooter2;
 
@@ -134,9 +135,24 @@ public class CleanTeleop extends LinearOpMode {
             SpeedAndAngleAutoAimUpdate();
             TelemetryStatements();
             handleUserShootingRanges();
+            updateReadyToShoot();
             //autoLock();
         }
     }
+
+    private void updateReadyToShoot(){
+        //(Math.abs(GoalShooterMotorTPS - shooterTPS) <= FunctionsAndValues.SpeedToleranceToStartShooting){
+        if (vision.isTagVisible()) {
+            if (Math.abs(AprilTagBearing) < FunctionsAndValues.AngleToleranceToStartShooting && shooterTPS > FunctionsAndValues.MinimumSpeed) {
+                ReadyToShootServo.setPosition(1);
+            } else {
+                ReadyToShootServo.setPosition(.66666666);
+            }
+        }
+        else{
+            ReadyToShootServo.setPosition(.33333);
+        }
+}
 
     private void TelemetryStatements(){
         //telemetry.addData("Status", "Run Time: " + runtime.toString());
@@ -173,7 +189,7 @@ public class CleanTeleop extends LinearOpMode {
 
         //if (gamepad2.dpad_left && currentAngle < 180) {currentAngle += 2;}
         //if (gamepad2.dpad_right && currentAngle > 0) {currentAngle -= 2;}
-        currentAngle -= gamepad2.right_stick_x*2;
+        currentAngle -= gamepad2.right_stick_x*3.5;
         if (currentAngle > 180) {currentAngle = 180;}
         if (currentAngle < 0) {currentAngle = 0;}
 
@@ -182,9 +198,11 @@ public class CleanTeleop extends LinearOpMode {
     }
 
     private void SpeedAndAngleAutoAimUpdate(){
-        if (vision.isTagVisible()) {
+
+        if (vision.getRange()!=-1) {
             range = vision.getRange();
         }
+
 
         if (AutoAim){
             double[] shooterGoals = FAndV.handleShootingRanges(range);
@@ -194,74 +212,39 @@ public class CleanTeleop extends LinearOpMode {
         }
     }
 
-    private double[] lastRangeBearing = {0.1, 0.1};
-    //private double lastRangeInertOff = 0.0;
-//private double lastRotInertOff = 0.0;
-    private double lastCheckedTime = 0.0;
-
-    private void autoLock(){
-        if (gamepad2.dpadLeftWasPressed()) {
-            SelfAimToggle = !SelfAimToggle;
-        };
-
-        if (SelfAimToggle & vision.isTagVisible()) {
-            double timeScaleVal = (100*getRuntime()) - lastCheckedTime;
-            double rangeScaleVal = timeScaleVal * 0.5;
-            double bearingScaleVal = timeScaleVal * 1;
-
-
-            lastCheckedTime = (100*getRuntime());
-            range = vision.getRange();
-
-            double rangeChange = Math.abs(range - lastRangeBearing[0]);
-            double bearingChange = Math.abs(AprilTagBearing - lastRangeBearing[1]);
-
-            double tempRange = range;
-            double tempBearing = AprilTagBearing;
-            if (rangeChange > rangeScaleVal) {
-                tempRange += (range - lastRangeBearing[0]);
-
-            }
-
-            if (bearingChange > bearingScaleVal){
-                tempBearing += AprilTagBearing - lastRangeBearing[1];
-
-            }
-
-
-            double[] ShooterRotatorServoAngle = FAndV.calculateShooterRotation(tempBearing,true, currentAngle, false);
-            ShooterRotatorServo.setPosition(ShooterRotatorServoAngle[0]);
-            currentAngle = ShooterRotatorServoAngle[1];
-
-
-            double[] shooterGoals = FAndV.handleShootingRanges(tempRange);
-            ShooterAngle = shooterGoals[0];
-            GoalShooterMotorTPS = shooterGoals[1];
-
-            lastRangeBearing[0] = range;
-            lastRangeBearing[1] = AprilTagBearing;
-        };
-    }
-
     private void handleUserShootingRanges(){
         if (gamepad2.left_bumper){
-            //AutoAim = false;
-            ShooterRotatorServo.setPosition(.5);
+            AutoAim = false;
+            //ShooterRotatorServo.setPosition(.5);
+            currentAngle = 90;
             GoalShooterMotorTPS = 1025;
             ShooterAngle = .15;
+        }
+
+        if (gamepad2.dpad_left){
+            //code for left side far shooting
+        }
+        if (gamepad2.dpad_right){
+            //code for right side far shooting
         }
     }
 
     private void handleFlywheel(){
-
-        shooterTPS = Math.abs(ShooterMotor.getVelocity()); // Ticks per second
+        if (Math.abs(ShooterMotor.getVelocity())< Math.abs(ShooterMotor2.getVelocity())) {
+            shooterTPS = Math.abs( ShooterMotor2.getVelocity());
+        }
+        else {
+            shooterTPS = Math.abs(ShooterMotor.getVelocity()); // Ticks per second
+        }
 
     //flywheel stuff.
 
     if (gamepad2.xWasPressed()) {//(isXPressed && !wasXButtonPressed) {
-        // Flip the state: if it was on, turn it off; if it was off, turn it on.
-        shooterMotorOn = !shooterMotorOn;
+        shooterMotorOn = true;
     }
+        if (gamepad2.yWasPressed()) {//(isXPressed && !wasXButtonPressed) {
+            shooterMotorOn = false;
+        }
 
     if (gamepad2.dpadDownWasPressed() && GoalShooterMotorTPS > FunctionsAndValues.MinimumSpeed) {
         GoalShooterMotorTPS -= 50;
@@ -279,22 +262,57 @@ public class CleanTeleop extends LinearOpMode {
     }
 
     private void handleIntake() {
+        // handle feeding to shooter
+        double ShootMechanismPower = 0; //Positive value = shooting, negative value = retract balls and spit them out
+
+        if (!gamepad2.right_bumper && gamepad2.right_trigger > 0 && Math.abs(GoalShooterMotorTPS - shooterTPS) <= FunctionsAndValues.SpeedToleranceToStartShooting) {//(Math.abs(GoalShooterMotorTPS - shooterTPS) <= ToleranceForShooting)
+            ShootMechanismPower=1;
+//            if (vision.isTagVisible() && Math.abs(AprilTagBearing) > FunctionsAndValues.AngleToleranceToStartShooting){
+//                // should make it so that if ur scanning the code and bearing is more than blah blah, it doesnt let u shoot
+//                ShootMechanismPower=0;
+//            }
+        }
+
+        else if (gamepad2.right_bumper&& gamepad2.right_trigger > 0) {
+            ShootMechanismPower=1;
+        }
+
+        else if(gamepad2.back) {
+            ShootMechanismPower=-1;
+        }
+
+
+        //IntakeMotor.setPower(-gamepad2.right_trigger * ShootMechanismPower);
+        //StopIntakeMotor.setPower(gamepad2.right_trigger *ShootMechanismPower);
+        BallFeederServo.setPower(gamepad2.right_trigger * ShootMechanismPower);
+
+        BallFeederServo2.setPower(BallFeederServo.getPower());
+
+
+        //handle normal intake stuff
+
         double IntakePowerValue = -Math.abs(gamepad2.left_trigger);
         if (Math.abs(gamepad1.left_trigger) > Math.abs(gamepad2.left_trigger)){
             IntakePowerValue = -Math.abs(gamepad1.left_trigger);
+        }
+        if (Math.abs(gamepad2.right_trigger) > Math.abs(gamepad2.left_trigger)){
+            IntakePowerValue = -Math.abs(gamepad2.right_trigger);
+        }
+        if (ShootMechanismPower==-1){
+            IntakePowerValue = 1;
         }
 
         IntakeMotor.setPower(IntakePowerValue);
         StopIntakeMotor.setPower(-IntakePowerValue);
 
 
-        // shoot if ready
+        /*if (!gamepad2.right_bumper && gamepad2.right_trigger > 0 && Math.abs(GoalShooterMotorTPS - shooterTPS) <= FunctionsAndValues.SpeedToleranceToStartShooting) {//(Math.abs(GoalShooterMotorTPS - shooterTPS) <= ToleranceForShooting)
 
-        if (!gamepad2.right_bumper && gamepad2.right_trigger > 0 && Math.abs(GoalShooterMotorTPS - shooterTPS) <= FunctionsAndValues.SpeedToleranceToStartShooting) {//(Math.abs(GoalShooterMotorTPS - shooterTPS) <= ToleranceForShooting)
+            if (vision.isTagVisible() && Math.abs(AprilTagBearing) < FunctionsAndValues.AngleToleranceToStartShooting){}
 
-        IntakeMotor.setPower(-gamepad2.right_trigger /1.2);
-        StopIntakeMotor.setPower(gamepad2.right_trigger / 1.2);
-        BallFeederServo.setPower(gamepad2.right_trigger);
+            IntakeMotor.setPower(-gamepad2.right_trigger /1.2);
+            StopIntakeMotor.setPower(gamepad2.right_trigger / 1.2);
+            BallFeederServo.setPower(gamepad2.right_trigger);
 
 
         }
@@ -317,7 +335,7 @@ public class CleanTeleop extends LinearOpMode {
             BallFeederServo.setPower(0);
         }
 
-        BallFeederServo2.setPower(BallFeederServo.getPower());
+        BallFeederServo2.setPower(BallFeederServo.getPower());*/
     }
 
     private void handleDriving() {
@@ -363,7 +381,7 @@ public class CleanTeleop extends LinearOpMode {
         // Initialize shooterAngle with the servo's current position to start.
         // This ensures it always has a value.
 
-        if (gamepad2.dpad_right || gamepad2.dpad_left) {
+        /*if (gamepad2.dpad_right || gamepad2.dpad_left) {
             if (gamepad2.dpad_right && HoodAngle < 1) {
                 HoodAngle += .02;
             } else if (gamepad2.dpad_left && HoodAngle > 0) {
@@ -375,11 +393,14 @@ public class CleanTeleop extends LinearOpMode {
                     FunctionsAndValues.startPoint,  // output start
                     FunctionsAndValues.endPoint     // output end
             );
-        }
+        }*/
+
+        ShooterAngle-=gamepad2.left_stick_y/15;
+        //normalize
+        if (ShooterAngle>FunctionsAndValues.endPoint){ShooterAngle=FunctionsAndValues.endPoint;}
+        if (ShooterAngle<FunctionsAndValues.startPoint){ShooterAngle=FunctionsAndValues.startPoint;}
 
         ServoShooter1.setPosition(ShooterAngle);
-        //ServoShooter2.setPosition(ShooterAngle);
-        //telemetry.addData("ActualVAlueHood ", HoodAngle );
         telemetry.addData("ServoAngle ", ShooterAngle );
 
     }
@@ -419,6 +440,8 @@ public class CleanTeleop extends LinearOpMode {
         BallFeederServo2 = hardwareMap.get(CRServo.class, "BallFeederServo2");
         ShooterRotatorServo = hardwareMap.get(Servo.class, "ShooterRotatorServo");
         ServoShooter1 = hardwareMap.get(Servo.class, "ServoShooter1");
+        ReadyToShootServo = hardwareMap.get(Servo.class, "IndicatorServo");
+
 
         //directions
         BallFeederServo2.setDirection(CRServo.Direction.REVERSE);
@@ -429,5 +452,54 @@ public class CleanTeleop extends LinearOpMode {
         ShooterMotor2.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         IntakeMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
     }
+
+    //private double[] lastRangeBearing = {0.1, 0.1};
+    //private double lastRangeInertOff = 0.0;
+//private double lastRotInertOff = 0.0;
+    //private double lastCheckedTime = 0.0;
+
+    /*private void autoLock(){
+        if (gamepad2.dpadLeftWasPressed()) {
+            SelfAimToggle = !SelfAimToggle;
+        };
+
+        if (SelfAimToggle & vision.isTagVisible()) {
+            double timeScaleVal = (100*getRuntime()) - lastCheckedTime;
+            double rangeScaleVal = timeScaleVal * 0.5;
+            double bearingScaleVal = timeScaleVal * 1;
+
+
+            lastCheckedTime = (100*getRuntime());
+            range = vision.getRange();
+
+            double rangeChange = Math.abs(range - lastRangeBearing[0]);
+            double bearingChange = Math.abs(AprilTagBearing - lastRangeBearing[1]);
+
+            double tempRange = range;
+            double tempBearing = AprilTagBearing;
+            if (rangeChange > rangeScaleVal) {
+                tempRange += (range - lastRangeBearing[0]);
+
+            }
+
+            if (bearingChange > bearingScaleVal){
+                tempBearing += AprilTagBearing - lastRangeBearing[1];
+
+            }
+
+
+            double[] ShooterRotatorServoAngle = FAndV.calculateShooterRotation(tempBearing,true, currentAngle, false);
+            ShooterRotatorServo.setPosition(ShooterRotatorServoAngle[0]);
+            currentAngle = ShooterRotatorServoAngle[1];
+
+
+            double[] shooterGoals = FAndV.handleShootingRanges(tempRange);
+            ShooterAngle = shooterGoals[0];
+            GoalShooterMotorTPS = shooterGoals[1];
+
+            lastRangeBearing[0] = range;
+            lastRangeBearing[1] = AprilTagBearing;
+        };
+    }*/
 
   }

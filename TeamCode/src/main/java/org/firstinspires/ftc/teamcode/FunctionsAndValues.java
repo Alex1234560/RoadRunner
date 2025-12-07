@@ -11,10 +11,13 @@ import com.qualcomm.robotcore.util.Range;
 @Config
 public class FunctionsAndValues {
     public static double SpeedToleranceToStartShooting = 60;
-    //public static double side = -1;
+    public static double AngleToleranceToStartShooting = 2;
+    public static double side = -1;// -1 is blue 1 is red
     public static double MinimumSpeed = 600;
 
-    public static double tuningMultiplier = 3;
+    public static double tuningMultiplier = 3.5;
+
+    //public static boolean disableBearingPrediction = false;
 
     public static double startPoint = .15;
     public static double endPoint = .9;//.7
@@ -35,7 +38,6 @@ public class FunctionsAndValues {
             kI,     // kI  (usually 0)
             kD     // kD  (often 0)
     );
-    //public static double SpeedMultiplierChange = .0001;
 
     public FunctionsAndValues() {
 
@@ -50,7 +52,7 @@ public class FunctionsAndValues {
         if (auto){
             rotationCompensation = .1 * tuningMultiplier;
         }
-        else{
+        else{// |-_-|
             rotationCompensation = .5* tuningMultiplier;
         }
 
@@ -59,15 +61,21 @@ public class FunctionsAndValues {
         double newCurrentAngle = currentAngle;
         double newBearing = bearing;
 
-        if ( Math.abs(bearing) <= 30 && autorotate) {
+        if ( Math.abs(bearing) <= 30 && autorotate && bearing != 999) {
 
 
             double angleChangeAmount = (bearing/GearRatio) * rotationCompensation;
             double bearingChangeAmount = bearing * rotationCompensation;
-            if (Math.abs(bearing)<3){
+            //if (disableBearingPrediction){bearingChangeAmount=0;}
+            if (Math.abs(bearing)<6){
                 angleChangeAmount=angleChangeAmount/2;
                 bearingChangeAmount=angleChangeAmount/2;
             }
+            if (Math.abs(bearing)<3){
+                angleChangeAmount=angleChangeAmount/3;
+                bearingChangeAmount=angleChangeAmount/3;
+            }
+
 
             //newCurrentAngle += (bearing/GearRatio) * rotationCompensation;
             newCurrentAngle +=angleChangeAmount;

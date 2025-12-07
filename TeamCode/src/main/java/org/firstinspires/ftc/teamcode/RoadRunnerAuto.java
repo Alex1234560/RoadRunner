@@ -278,16 +278,6 @@ public class RoadRunnerAuto extends LinearOpMode {
                         ServoShooter1.setPosition(ServoAngle);
                     }
 
-                    // handling shooter angle avobe
-
-
-
-
-//                    telemetry.addData("shooterTPS: ", shooterTPS);
-//                    telemetry.addData("GoalTPS: ", GoalTPS);
-//                    telemetry.addData("SpinShootingBallFeeder : ", SpinShootingBallFeeder);
-//                    telemetry.addData("ShooterMotorPower : ", ShooterMotorPower);
-
                     if (Math.abs(shooterTPS-GoalTPS)<=FunctionsAndValues.SpeedToleranceToStartShooting && Math.abs(AprilTagBearing)<=RotatorAngleTolerance) {
                             SpinShootingBallFeeder=true;
 
@@ -418,15 +408,34 @@ public class RoadRunnerAuto extends LinearOpMode {
 
     @Override
     public void runOpMode() throws InterruptedException {
-        vision = new AprilTagVision(hardwareMap, "Webcam");
-        vision.setManualExposure(AprilTagVision.myExposure, AprilTagVision.myGain);
         double side = -1; // -1 is blue 1 is red
+
+        vision = new AprilTagVision(hardwareMap, "Webcam");
+        while (!isStarted() && !isStopRequested()) {
+            telemetry.addData("Alliance Selection", "X for BLUE, B for RED");
+            if (side==-1){telemetry.addData("Selected BLUE ", String.valueOf(side),"");}
+            if (side==1){telemetry.addData("Selected RED ", String.valueOf(side),"");}
+
+            //telemetry.addData("Selected", side);
+            telemetry.update();
+
+            if (gamepad1.x) {
+                side = -1;
+            } else if (gamepad1.b) {
+                side = 1;
+            }
+        }
+
+        //vision.setManualExposure(AprilTagVision.myExposure, AprilTagVision.myGain);
+
         double StartingAngle = (90*side); // =128
         double ShootAngle = Math.toRadians( -130*-side);//(50+180)*-side ); // not sure if it works on other side ( 1 )
         double StartingX = -60.5;
         double StartingY = 36.5*side;
-
         double distanceBetweenBalls = 23;
+
+        //side selection
+
 
         //poses
         Pose2d initialPos = new Pose2d(StartingX, StartingY, Math.toRadians(StartingAngle));//(0, 0, Math.toRadians(0));
@@ -434,25 +443,27 @@ public class RoadRunnerAuto extends LinearOpMode {
         Pose2d BallsIntakenPos = new Pose2d(-11.5, 46.5*side , Math.toRadians(StartingAngle));
         Pose2d ShootPos = new Pose2d(-35, 35*side , ShootAngle); // not sure if work on both sides
 
+        Pose2d ParkPosition = new Pose2d(5.7, 28*side , Math.toRadians(StartingAngle)); // not sure if work on both sides
+
 
 
         MecanumDrive drive = new MecanumDrive(hardwareMap, initialPos);
         Intake intake = new Intake(hardwareMap);
         Shooter shooter = new Shooter(hardwareMap);
 
+        ElapsedTime autoTimer = new ElapsedTime();
         //poses
-
 
 
         // actionBuilder builds from the drive steps passed to it
         Pose2d pose = drive.localizer.getPose();
 
-
-
         waitForStart();
 
 
         if (isStopRequested()) return;
+        autoTimer.reset();
+
         Actions.runBlocking(
                 new SequentialAction(
                         new ParallelAction(

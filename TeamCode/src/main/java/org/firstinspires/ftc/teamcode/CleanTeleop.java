@@ -285,7 +285,6 @@ public class CleanTeleop extends LinearOpMode {
         //IntakeMotor.setPower(-gamepad2.right_trigger * ShootMechanismPower);
         //StopIntakeMotor.setPower(gamepad2.right_trigger *ShootMechanismPower);
         BallFeederServo.setPower(gamepad2.right_trigger * ShootMechanismPower);
-
         BallFeederServo2.setPower(BallFeederServo.getPower());
 
 
@@ -444,7 +443,7 @@ public class CleanTeleop extends LinearOpMode {
 
 
         //directions
-        BallFeederServo2.setDirection(CRServo.Direction.REVERSE);
+        //BallFeederServo2.setDirection(CRServo.Direction.REVERSE);
         //ServoShooter1.setDirection(Servo.Direction.REVERSE);
         ShooterMotor2.setDirection(DcMotorEx.Direction.REVERSE);
         // run shooter with encoder

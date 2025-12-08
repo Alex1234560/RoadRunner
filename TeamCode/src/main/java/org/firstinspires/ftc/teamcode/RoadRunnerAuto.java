@@ -51,7 +51,7 @@ public class RoadRunnerAuto extends LinearOpMode {
         public Intake(HardwareMap hardwareMap) {
             BallFeederServo = hardwareMap.get(CRServo.class, "BallFeederServo");
             BallFeederServo2 = hardwareMap.get(CRServo.class, "BallFeederServo2");
-            BallFeederServo2.setDirection(CRServo.Direction.REVERSE);
+            //BallFeederServo2.setDirection(CRServo.Direction.REVERSE);
             BallFeederServo.setPower(0);
             BallFeederServo2.setPower(0);
 
@@ -179,11 +179,12 @@ public class RoadRunnerAuto extends LinearOpMode {
             ShooterRotatorServo = hardwareMap.get(Servo.class, "ShooterRotatorServo");
 
             ServoShooter1 = hardwareMap.get(Servo.class, "ServoShooter1");
+            ServoShooter1.setDirection(Servo.Direction.REVERSE);
 
             ShooterMotor = hardwareMap.get(DcMotorEx.class, "Shooter");
             ShooterMotor2 = hardwareMap.get(DcMotorEx.class, "Shooter2");
             ShooterMotor2.setDirection(DcMotorSimple.Direction.REVERSE);
-            //ServoShooter1.setDirection(Servo.Direction.REVERSE);
+
             ShooterMotor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
             ShooterMotor2.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         }
@@ -409,42 +410,80 @@ public class RoadRunnerAuto extends LinearOpMode {
     @Override
     public void runOpMode() throws InterruptedException {
         double side = -1; // -1 is blue 1 is red
+        boolean FrontAuto = true; // -1 is blue 1 is red
 
         vision = new AprilTagVision(hardwareMap, "Webcam");
         while (!isStarted() && !isStopRequested()) {
-            telemetry.addData("Alliance Selection", "X for BLUE, B for RED");
-            if (side==-1){telemetry.addData("Selected BLUE ", String.valueOf(side),"");}
-            if (side==1){telemetry.addData("Selected RED ", String.valueOf(side),"");}
-
-            //telemetry.addData("Selected", side);
-            telemetry.update();
-
-            if (gamepad1.x) {
-                side = -1;
-            } else if (gamepad1.b) {
-                side = 1;
+            telemetry.addData("Alliance Selection", "X for BLUE, B for RED, Y for FRONT, A for BACK");
+            if (side == -1) {
+                telemetry.addData("Color: BLUE ", "");
             }
+            if (side == 1) {
+                telemetry.addData("Color: RED ", "");
+            }
+            if (FrontAuto) {
+                telemetry.addData("pos: FRONT ", "");
+            }
+            if (!FrontAuto) {
+                telemetry.addData("pos: BACK ", "");
+            }
+
+            if (gamepad1.x) {side = -1;}
+            if (gamepad1.b) {side = 1;}
+            if (gamepad1.y) {FrontAuto=true;}
+            if (gamepad1.a) {FrontAuto=false;}
+            telemetry.update();
         }
 
         //vision.setManualExposure(AprilTagVision.myExposure, AprilTagVision.myGain);
 
-        double StartingAngle = (90*side); // =128
-        double ShootAngle = Math.toRadians( -130*-side);//(50+180)*-side ); // not sure if it works on other side ( 1 )
-        double StartingX = -60.5;
-        double StartingY = 36.5*side;
-        double distanceBetweenBalls = 23;
+
+
+
 
         //side selection
+        double StartingAngle;
+        double ShootAngle;
+        double StartingX;
+        double StartingY;
+        double distanceBetweenBalls = 23;
 
 
         //poses
-        Pose2d initialPos = new Pose2d(StartingX, StartingY, Math.toRadians(StartingAngle));//(0, 0, Math.toRadians(0));
-        Pose2d IntakePosition = new Pose2d(-11.5, 18.5*side , Math.toRadians(StartingAngle));
-        Pose2d BallsIntakenPos = new Pose2d(-11.5, 46.5*side , Math.toRadians(StartingAngle));
-        Pose2d ShootPos = new Pose2d(-35, 35*side , ShootAngle); // not sure if work on both sides
+        Pose2d initialPos;
+        Pose2d IntakePosition;
+        Pose2d BallsIntakenPos;
+        Pose2d ShootPos;
+        Pose2d ParkPosition;
 
-        Pose2d ParkPosition = new Pose2d(5.7, 28*side , Math.toRadians(StartingAngle)); // not sure if work on both sides
+        if (FrontAuto) {
+            StartingAngle = (90 * side); // =128
+            ShootAngle = Math.toRadians(-130 * -side);//(50+180)*-side ); // not sure if it works on other side ( 1 )
+            StartingX = -60.5;
+            StartingY = 36.5 * side;
 
+
+            initialPos = new Pose2d(StartingX, StartingY, Math.toRadians(StartingAngle));//(0, 0, Math.toRadians(0));
+            IntakePosition = new Pose2d(-11.5, 18.5 * side, Math.toRadians(StartingAngle));
+            BallsIntakenPos = new Pose2d(-11.5, 46.5 * side, Math.toRadians(StartingAngle));
+            ShootPos = new Pose2d(-35, 35 * side, ShootAngle); // not sure if work on both sides
+
+            ParkPosition = new Pose2d(5.7, 28 * side, Math.toRadians(StartingAngle)); // not sure if work on both sides
+        }
+        else{
+            StartingAngle = Math.toRadians(0);
+            ShootAngle = Math.toRadians(0);
+            StartingX = 61.3;
+            StartingY = 14 * side;
+
+            initialPos = new Pose2d(StartingX, StartingY, Math.toRadians(StartingAngle));//(0, 0, Math.toRadians(0));
+            IntakePosition = new Pose2d(36.1, 30 * side, Math.toRadians(StartingAngle));
+            BallsIntakenPos = new Pose2d(36.1, 50 * side, Math.toRadians(StartingAngle));
+            ShootPos = new Pose2d(StartingX, StartingY, ShootAngle); // not sure if work on both sides
+
+            ParkPosition = new Pose2d(41, 26 * side, Math.toRadians(StartingAngle)); // not sure if work on both sides
+
+        }
 
 
         MecanumDrive drive = new MecanumDrive(hardwareMap, initialPos);
@@ -453,87 +492,89 @@ public class RoadRunnerAuto extends LinearOpMode {
 
         ElapsedTime autoTimer = new ElapsedTime();
         //poses
-
-
-        // actionBuilder builds from the drive steps passed to it
-        Pose2d pose = drive.localizer.getPose();
-
         waitForStart();
 
 
         if (isStopRequested()) return;
         autoTimer.reset();
 
-        Actions.runBlocking(
-                new SequentialAction(
-                        new ParallelAction(
-                                shooter.runShooter(false),//shoot at a predetermined speed
-                                intake.passABallToShooter()
+        if (FrontAuto) {
+
+            Actions.runBlocking(
+                    new SequentialAction(
+                            new ParallelAction(
+                                    shooter.runShooter(false),//shoot at a predetermined speed
+                                    intake.passABallToShooter()
+                            )
+                    )
+            );
+
+            for (int i = 0; i < 3; i++) {
+
+                TrajectoryActionBuilder GoToShootPos = drive.actionBuilder(BallsIntakenPos)
+                        .strafeTo(new Vector2d(BallsIntakenPos.position.x, 40 * side))
+                        .strafeToLinearHeading(new Vector2d(ShootPos.position.x, ShootPos.position.y), ShootPos.heading.log());
+
+                TrajectoryActionBuilder GoForwardsToIntakeBalls = drive.actionBuilder(IntakePosition) // switch to drive.localizer.getPose() to make s
+                        //grab balls
+                        .strafeTo(new Vector2d(BallsIntakenPos.position.x, BallsIntakenPos.position.y));
+
+                TrajectoryActionBuilder MoveTowardsIntakePosition;
+
+                MoveTowardsIntakePosition = drive.actionBuilder(initialPos)
+                        //go to balls
+                        .strafeTo(new Vector2d(IntakePosition.position.x, IntakePosition.position.y))
+
+                ;
+
+                TrajectoryActionBuilder TurnFromShootPosToNormal = drive.actionBuilder(ShootPos)
+                        .turn(Math.toRadians(StartingAngle) - ShootPos.heading.log());
+
+
+                Actions.runBlocking(
+                        new SequentialAction(
+
+                                MoveTowardsIntakePosition.build(),
+                                intake.intakeOn(),
+                                GoForwardsToIntakeBalls.build(),
+                                intake.intakeOff(),
+                                GoToShootPos.build(),
+                                shooter.centerShooter(),
+
+                                new ParallelAction(
+                                        shooter.runShooter(true),
+                                        intake.passABallToShooter()
+                                ),
+                                TurnFromShootPosToNormal.build()
+
                         )
-                )
-        );
+                );
 
-        for (int i = 0; i < 3; i++) {
-
-            TrajectoryActionBuilder GoToShootPos = drive.actionBuilder(BallsIntakenPos)
-                    .strafeTo(new Vector2d( BallsIntakenPos.position.x,40*side))
-                    .strafeToLinearHeading(new Vector2d( ShootPos.position.x,ShootPos.position.y), ShootPos.heading.log())
+                BallsIntakenPos = new Pose2d(BallsIntakenPos.position.x + distanceBetweenBalls, BallsIntakenPos.position.y, BallsIntakenPos.heading.log());
+                IntakePosition = new Pose2d(IntakePosition.position.x + distanceBetweenBalls, IntakePosition.position.y, IntakePosition.heading.log());
+                initialPos = new Pose2d(ShootPos.position.x, ShootPos.position.y, Math.toRadians(StartingAngle));//ShootPos.heading.log());
+            }
 
 
-                    ;
+        }
+        if (!FrontAuto){
 
-            TrajectoryActionBuilder GoForwardsToIntakeBalls = drive.actionBuilder(IntakePosition) // switch to drive.localizer.getPose() to make s
-                    //grab balls
-                    .strafeTo(new Vector2d(BallsIntakenPos.position.x, BallsIntakenPos.position.y))
-                    ;
-
-            TrajectoryActionBuilder MoveTowardsIntakePosition;
-
-            MoveTowardsIntakePosition = drive.actionBuilder(initialPos)
-                    //go to balls
-
-                    //.strafeTo(new Vector2d(initialPos.position.x, IntakePosition.position.y))
-                    //.strafeTo(new Vector2d(IntakePosition.position.x, IntakePosition.position.y))
-
+            TrajectoryActionBuilder MoveToParkPosition = drive.actionBuilder(initialPos)
                     .strafeTo(new Vector2d(IntakePosition.position.x, IntakePosition.position.y))
-
-            ;
-
-            TrajectoryActionBuilder TurnFromShootPosToNormal = drive.actionBuilder(ShootPos)
-                    .turn(Math.toRadians(StartingAngle) - ShootPos.heading.log())
                     ;
-
-
-
 
             Actions.runBlocking(
                     new SequentialAction(
 
-                            MoveTowardsIntakePosition.build(),
-                            intake.intakeOn(),
-                            GoForwardsToIntakeBalls.build(),
-                            intake.intakeOff(),
-                            GoToShootPos.build(),
-                            shooter.centerShooter(),
-                            //shooter.aim(),// give a little time to aim
                             new ParallelAction(
-                                    //shooter.aim(), // aim while shooting
                                     shooter.runShooter(true),
                                     intake.passABallToShooter()
                             ),
-                            TurnFromShootPosToNormal.build()
 
+                            MoveToParkPosition.build()
                     )
             );
 
-            BallsIntakenPos = new Pose2d(BallsIntakenPos.position.x + distanceBetweenBalls, BallsIntakenPos.position.y, BallsIntakenPos.heading.log());
-            IntakePosition = new Pose2d(IntakePosition.position.x + distanceBetweenBalls, IntakePosition.position.y, IntakePosition.heading.log());
-            initialPos = new Pose2d(ShootPos.position.x, ShootPos.position.y, Math.toRadians(StartingAngle));//ShootPos.heading.log());
-        }
-
-        while (opModeIsActive() && !isStopRequested()) {
-            telemetry.addData("running telemetry", ":)");
-            telemetry.update();
         }
     }
 

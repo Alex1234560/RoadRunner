@@ -1,7 +1,4 @@
-
-
-1 REVERSE THE DIRECTION OF THE BALLFEEDER SECOND SERVO.
-
+MAKE ROBOT FASTER
 
 1 Auto Spool and aim before actually getting to shoot pos to be faster, and shoot from a more efficient position
 2 make button for back

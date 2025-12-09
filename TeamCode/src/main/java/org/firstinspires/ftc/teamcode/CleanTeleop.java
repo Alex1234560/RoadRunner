@@ -222,10 +222,10 @@ public class CleanTeleop extends LinearOpMode {
         }
 
         if (gamepad2.dpad_left){
-            //code for left side far shooting
+
         }
         if (gamepad2.dpad_right){
-            //code for right side far shooting
+
         }
     }
 
@@ -338,9 +338,9 @@ public class CleanTeleop extends LinearOpMode {
     }
 
     private void handleDriving() {
-        double speed = .5;
+        double speed = 1; //
         //if (gamepad1.right_trigger ==1){speed = 1;}
-        speed += gamepad1.right_trigger / 2;
+        speed -= gamepad1.right_trigger / 2; // trigger makes it slower
 
         double axial = -gamepad1.left_stick_y * speed;
         double lateral = gamepad1.left_stick_x * speed; // Note: pushing stick forward gives negative value
@@ -355,7 +355,7 @@ public class CleanTeleop extends LinearOpMode {
             imu.resetYaw();
         }
 
-        if (gamepad1.xWasPressed()) {
+        if (gamepad1.yWasPressed()) {
             fieldCentricDrive = !fieldCentricDrive;
         }
 

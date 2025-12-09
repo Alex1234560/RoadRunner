@@ -18,7 +18,7 @@ public class MeepMeepTesting {
 
 
     public static void main(String[] args) {
-        int side = -1; // - equal blue,+ equal red
+        int side = 1; // - equal blue,+ equal red
         boolean FrontAuto=false;
         double StartingAngle;
         double ShootAngle;
@@ -50,7 +50,7 @@ public class MeepMeepTesting {
         }
         else{
             StartingAngle = (180);
-            ShootAngle = (0);
+            ShootAngle = (180);
             StartingX = 61.3;
             StartingY = 14 * side;
 
@@ -69,7 +69,7 @@ public class MeepMeepTesting {
                 .setConstraints(60, 60, Math.toRadians(180), Math.toRadians(180), 15)//track width 15
 
                 .followTrajectorySequence(drive -> drive.trajectorySequenceBuilder(new Pose2d(StartingX, StartingY, Math.toRadians(StartingAngle))) // for next to wall on shooter thing
-                        .strafeTo(new Vector2d(IntakePosition.getX(), IntakePosition.getY()))
+                        .strafeTo(new Vector2d(ParkPosition.getX(), ParkPosition.getY()))
 
 
 

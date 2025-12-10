@@ -277,7 +277,7 @@ public class RoadRunnerAuto extends LinearOpMode {
 
                             }
                         }
-                        double[] ShooterRotatorServoAngle = FAndV.calculateShooterRotation(AprilTagBearing, true, CurrentAngle, true);
+                        double[] ShooterRotatorServoAngle = FAndV.calculateShooterRotation(AprilTagBearing, true, CurrentAngle, true, range);
                         ShooterRotatorServo.setPosition(ShooterRotatorServoAngle[0]);
                         CurrentAngle = ShooterRotatorServoAngle[1];
                         AprilTagBearing = ShooterRotatorServoAngle[2];
@@ -372,7 +372,7 @@ public class RoadRunnerAuto extends LinearOpMode {
                         }
                     }
 
-                    double[] ShooterRotatorServoAngle = this.FAndV.calculateShooterRotation(AprilTagBearing, true, CurrentAngle, true);
+                    double[] ShooterRotatorServoAngle = this.FAndV.calculateShooterRotation(AprilTagBearing, true, CurrentAngle, true, range);
                     ShooterRotatorServo.setPosition(ShooterRotatorServoAngle[0]);
                     CurrentAngle = ShooterRotatorServoAngle[1];
                     AprilTagBearing = ShooterRotatorServoAngle[2];
@@ -483,7 +483,7 @@ public class RoadRunnerAuto extends LinearOpMode {
             initialPos = new Pose2d(StartingX, StartingY, StartingAngle);//(0, 0, Math.toRadians(0));
             IntakePosition = new Pose2d(-11.5, 18.5 * side, StartingAngle);
             BallsIntakenPos = new Pose2d(-11.5, 46.5 * side, StartingAngle);
-            ShootPos = new Pose2d(-35, 35 * side, ShootAngle); // not sure if work on both sides
+            ShootPos = new Pose2d(-17, 18 * side, ShootAngle); // not sure if work on both sides
 
             ParkPosition = new Pose2d(5.7, 28 * side, StartingAngle); // not sure if work on both sides
         }

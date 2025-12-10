@@ -179,7 +179,7 @@ public class CleanTeleop extends LinearOpMode {
 
     private void handleShooterRotation(){
         //this function will return current value unless able to adjust it, with autoaim and autoaim activated
-        double[] ShooterRotatorServoAngle = FAndV.calculateShooterRotation(AprilTagBearing, AutoAim,currentAngle,false);
+        double[] ShooterRotatorServoAngle = FAndV.calculateShooterRotation(AprilTagBearing, AutoAim,currentAngle,false , range);
         ShooterRotatorServo.setPosition(ShooterRotatorServoAngle[0]);
         currentAngle = ShooterRotatorServoAngle[1];
         AprilTagBearing = ShooterRotatorServoAngle[2];
@@ -244,10 +244,10 @@ public class CleanTeleop extends LinearOpMode {
         }
 
     if (gamepad2.dpadDownWasPressed() && GoalShooterMotorTPS > FunctionsAndValues.MinimumSpeed) {
-        GoalShooterMotorTPS -= 50;
+        GoalShooterMotorTPS -= 20;
     }
     else if (gamepad2.dpadUpWasPressed() && GoalShooterMotorTPS < 2400) {
-        GoalShooterMotorTPS += 50;
+        GoalShooterMotorTPS += 20;
 
     }
 

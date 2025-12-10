@@ -10,9 +10,14 @@ import com.qualcomm.robotcore.util.Range;
  */
 @Config
 public class FunctionsAndValues {
+
+    private static double BackRangeStart = 90;
+
+    public static double After90ChangeInAngle = -3;
+    public static double After90ChangeInSpeed = 100;
     public static double SpeedToleranceToStartShooting = 60;
     public static double AngleToleranceToStartShooting = 2;
-    public static double side = -1;// -1 is blue 1 is red
+
     public static double MinimumSpeed = 600;
 
     public static double tuningMultiplier = 3.5;
@@ -47,12 +52,12 @@ public class FunctionsAndValues {
         return calculateSpeedForShooter(GoalTPS);
     }
 
-    public double[] calculateShooterRotation(double bearing, boolean autorotate, double currentAngle, boolean auto) {
+    public double[] calculateShooterRotation(double bearing, boolean autorotate, double currentAngle, boolean auto, double range) {
         double rotationCompensation = 0;
         if (auto){
             rotationCompensation = .1 * tuningMultiplier;
         }
-        else{// |-_-|
+        else{
             rotationCompensation = .5* tuningMultiplier;
         }
 
@@ -60,6 +65,15 @@ public class FunctionsAndValues {
 
         double newCurrentAngle = currentAngle;
         double newBearing = bearing;
+
+        if (range>BackRangeStart){
+            if (bearing > 0){
+                bearing += After90ChangeInAngle;
+            }
+            if (bearing < 0){
+                bearing -= After90ChangeInAngle;
+            }
+        }
 
         if ( Math.abs(bearing) <= 30 && autorotate && bearing != 999) {
 
@@ -100,36 +114,7 @@ public class FunctionsAndValues {
         return ValuesForAngleAndCurrentAngleAndNewBearing;
     }
 
-    /*public double[] calculateShooterRotation(double bearing, boolean autorotate, double currentAngle) {
 
-        double[] ValuesForAngleAndCurrentAngleAndNewBearing = new double[3];
-
-        double newCurrentAngle = currentAngle;
-        double newBearing = bearing;
-
-        if (Math.abs(bearing) > rotationTolerance && Math.abs(bearing) <= 30 && autorotate) {
-
-            newCurrentAngle += bearing * rotationCompensation;
-            //newBearing += (bearing * rotationCompensation)*GearRatio;
-
-            newCurrentAngle = Math.min(180, Math.max(0, newCurrentAngle));
-        }
-
-
-        //returning value that is mapped from degrees to 0-1.
-        double valueForShooterServo = Range.scale(
-                newCurrentAngle,   // value you want to map
-                0, 180,        // input range
-                0,  // output start
-                1     // output end
-        );
-
-        ValuesForAngleAndCurrentAngleAndNewBearing[0] = valueForShooterServo;
-        ValuesForAngleAndCurrentAngleAndNewBearing[1] = newCurrentAngle;
-        ValuesForAngleAndCurrentAngleAndNewBearing[2] = newBearing;
-
-        return ValuesForAngleAndCurrentAngleAndNewBearing;
-    }*/
     //range to rpm and angle
     public double[] handleShootingRanges(double range) {
 
@@ -144,6 +129,10 @@ public class FunctionsAndValues {
         if (targAngle<startPoint){targAngle=startPoint;}
         if (targSpeed>2500){targSpeed=2500;}
         if (targSpeed<0){targSpeed=0;}
+
+        if (range>BackRangeStart){
+            targSpeed+=After90ChangeInSpeed;
+        }
 
 
         turretGoals[0] = targAngle;

@@ -30,6 +30,8 @@ import java.util.function.Function;
 @Autonomous(name = "RoadRunnerAuto", group = "Autonomous")
 public class RoadRunnerAuto extends LinearOpMode {
     public static double turnAmount = -50;
+
+    public static double side = 0;//-1 is blue 1 is red
     public static int RotatorAngleTolerance = 2;
     public static boolean ShootingNow = false;
     public static double GoalTPS = 1200;
@@ -239,6 +241,18 @@ public class RoadRunnerAuto extends LinearOpMode {
                         ServoAngle = .195;
                     }
                     ServoShooter1.setPosition(ServoAngle);
+
+
+                    // setting for shooter starting angle of far auto -1 is blue 1 is red
+                    if (this.far){
+                        if (side==1)
+                        CurrentAngle = 32;
+                        else if (side==-1){
+                            CurrentAngle = 148;
+                        }
+                    }
+
+                    ShooterRotatorServo.setPosition(CurrentAngle/180);
                 }
 
                 double currentTime = GlobalTimer.seconds();
@@ -342,6 +356,7 @@ public class RoadRunnerAuto extends LinearOpMode {
                     this.FAndV = new FunctionsAndValues();
                     CurrentAngle = ShooterRotatorServo.getPosition()*180;
 
+
                 }
 
 
@@ -354,11 +369,9 @@ public class RoadRunnerAuto extends LinearOpMode {
                         if (vision.getID() == 20 || vision.getID() == 24) {
                             AprilTagBearing = vision.getBearing();
                             range=vision.getRange();
-
                         }
-
-
                     }
+
                     double[] ShooterRotatorServoAngle = this.FAndV.calculateShooterRotation(AprilTagBearing, true, CurrentAngle, true);
                     ShooterRotatorServo.setPosition(ShooterRotatorServoAngle[0]);
                     CurrentAngle = ShooterRotatorServoAngle[1];
@@ -413,7 +426,7 @@ public class RoadRunnerAuto extends LinearOpMode {
 
     @Override
     public void runOpMode() throws InterruptedException {
-        double side = -1; // -1 is blue 1 is red
+        //double side = -1; // -1 is blue 1 is red side is now global
         boolean FrontAuto = true; // -1 is blue 1 is red
 
         vision = new AprilTagVision(hardwareMap, "Webcam");

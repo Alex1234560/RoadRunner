@@ -53,9 +53,6 @@ public class CleanTeleop extends LinearOpMode {
     // Hardware Setup Variables
     private Servo ServoShooter1;
     private Servo ReadyToShootServo;
-
-    //private Servo ServoShooter2;
-
     private static double ShooterAngle = FunctionsAndValues.startPoint;
     //setting up motors and time
     private ElapsedTime runtime = new ElapsedTime();
@@ -346,6 +343,8 @@ public class CleanTeleop extends LinearOpMode {
         double lateral = gamepad1.left_stick_x * speed; // Note: pushing stick forward gives negative value
         double yaw = gamepad1.right_stick_x * speed;
 
+        //depends on the auto u can add code here to change the starting angle of the field centric drive
+
         double robotHeading = imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.RADIANS);
 
         double fieldCentricAxial = axial * Math.cos(robotHeading) - lateral * Math.sin(robotHeading);
@@ -379,20 +378,6 @@ public class CleanTeleop extends LinearOpMode {
 
         // Initialize shooterAngle with the servo's current position to start.
         // This ensures it always has a value.
-
-        /*if (gamepad2.dpad_right || gamepad2.dpad_left) {
-            if (gamepad2.dpad_right && HoodAngle < 1) {
-                HoodAngle += .02;
-            } else if (gamepad2.dpad_left && HoodAngle > 0) {
-                HoodAngle -= .02;
-            }
-            ShooterAngle = Range.scale(
-                    HoodAngle,   // value you want to map
-                    0, 1,        // input range
-                    FunctionsAndValues.startPoint,  // output start
-                    FunctionsAndValues.endPoint     // output end
-            );
-        }*/
 
         ShooterAngle-=gamepad2.left_stick_y/15;
         //normalize
@@ -451,54 +436,5 @@ public class CleanTeleop extends LinearOpMode {
         ShooterMotor2.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         IntakeMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
     }
-
-    //private double[] lastRangeBearing = {0.1, 0.1};
-    //private double lastRangeInertOff = 0.0;
-//private double lastRotInertOff = 0.0;
-    //private double lastCheckedTime = 0.0;
-
-    /*private void autoLock(){
-        if (gamepad2.dpadLeftWasPressed()) {
-            SelfAimToggle = !SelfAimToggle;
-        };
-
-        if (SelfAimToggle & vision.isTagVisible()) {
-            double timeScaleVal = (100*getRuntime()) - lastCheckedTime;
-            double rangeScaleVal = timeScaleVal * 0.5;
-            double bearingScaleVal = timeScaleVal * 1;
-
-
-            lastCheckedTime = (100*getRuntime());
-            range = vision.getRange();
-
-            double rangeChange = Math.abs(range - lastRangeBearing[0]);
-            double bearingChange = Math.abs(AprilTagBearing - lastRangeBearing[1]);
-
-            double tempRange = range;
-            double tempBearing = AprilTagBearing;
-            if (rangeChange > rangeScaleVal) {
-                tempRange += (range - lastRangeBearing[0]);
-
-            }
-
-            if (bearingChange > bearingScaleVal){
-                tempBearing += AprilTagBearing - lastRangeBearing[1];
-
-            }
-
-
-            double[] ShooterRotatorServoAngle = FAndV.calculateShooterRotation(tempBearing,true, currentAngle, false);
-            ShooterRotatorServo.setPosition(ShooterRotatorServoAngle[0]);
-            currentAngle = ShooterRotatorServoAngle[1];
-
-
-            double[] shooterGoals = FAndV.handleShootingRanges(tempRange);
-            ShooterAngle = shooterGoals[0];
-            GoalShooterMotorTPS = shooterGoals[1];
-
-            lastRangeBearing[0] = range;
-            lastRangeBearing[1] = AprilTagBearing;
-        };
-    }*/
 
   }

@@ -1,11 +1,83 @@
 MAKE ROBOT FASTER
 
 1 Auto Spool and aim before actually getting to shoot pos to be faster, and shoot from a more efficient position
-2 make button for back
+2 tune april tag code graph for back.
 4 make auto for back
-6 when theres 5 seconds left, go out of launch zone, and position yourself to be able to use field centric drive
+
 
 LESS IMPORTANT:
 
 1 make simpler aiming code that u understand better
 2 Make angle adjustment after autoaiig start off of current angle
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+levis code which didn't work:
+//private double[] lastRangeBearing = {0.1, 0.1};
+    //private double lastRangeInertOff = 0.0;
+//private double lastRotInertOff = 0.0;
+    //private double lastCheckedTime = 0.0;
+
+    /*private void autoLock(){
+        if (gamepad2.dpadLeftWasPressed()) {
+            SelfAimToggle = !SelfAimToggle;
+        };
+
+        if (SelfAimToggle & vision.isTagVisible()) {
+            double timeScaleVal = (100*getRuntime()) - lastCheckedTime;
+            double rangeScaleVal = timeScaleVal * 0.5;
+            double bearingScaleVal = timeScaleVal * 1;
+
+
+            lastCheckedTime = (100*getRuntime());
+            range = vision.getRange();
+
+            double rangeChange = Math.abs(range - lastRangeBearing[0]);
+            double bearingChange = Math.abs(AprilTagBearing - lastRangeBearing[1]);
+
+            double tempRange = range;
+            double tempBearing = AprilTagBearing;
+            if (rangeChange > rangeScaleVal) {
+                tempRange += (range - lastRangeBearing[0]);
+
+            }
+
+            if (bearingChange > bearingScaleVal){
+                tempBearing += AprilTagBearing - lastRangeBearing[1];
+
+            }
+
+
+            double[] ShooterRotatorServoAngle = FAndV.calculateShooterRotation(tempBearing,true, currentAngle, false);
+            ShooterRotatorServo.setPosition(ShooterRotatorServoAngle[0]);
+            currentAngle = ShooterRotatorServoAngle[1];
+
+
+            double[] shooterGoals = FAndV.handleShootingRanges(tempRange);
+            ShooterAngle = shooterGoals[0];
+            GoalShooterMotorTPS = shooterGoals[1];
+
+            lastRangeBearing[0] = range;
+            lastRangeBearing[1] = AprilTagBearing;
+        };
+    }*/

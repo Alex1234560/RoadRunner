@@ -35,8 +35,8 @@ public class RoadRunnerAuto extends LinearOpMode {
     public static int RotatorAngleTolerance = 2;
     public static boolean ShootingNow = false;
     public static double GoalTPS = 1200;
-    public static double shootingDuration = 2.4;   // How long to run in seconds
-    public static double ShootingDurationMax=6; // if conditions arent met for some reason for shooting duration, it will shoot until 6s
+    public static double shootingDuration = 2;   // How long to run in seconds
+
     public static double range = 0;
     public static boolean SpinShootingBallFeeder = false;
 
@@ -246,14 +246,20 @@ public class RoadRunnerAuto extends LinearOpMode {
                     // setting for shooter starting angle of far auto -1 is blue 1 is red
                     if (this.far){
                         if (side==1)
-                        CurrentAngle = 32;
+                        CurrentAngle = 40;
                         else if (side==-1){
-                            CurrentAngle = 148;
+                            CurrentAngle = 140;
                         }
                     }
 
                     ShooterRotatorServo.setPosition(CurrentAngle/180);
                 }
+
+                double ShootingDurationMax;
+
+                if (this.far){ShootingDurationMax=10;}
+                else{ShootingDurationMax=3;}
+
 
                 double currentTime = GlobalTimer.seconds();
                 double deltaTime = currentTime - lastLoopTime;
@@ -590,6 +596,18 @@ public class RoadRunnerAuto extends LinearOpMode {
                 initialPos = new Pose2d(ShootPos.position.x, ShootPos.position.y, StartingAngle);//ShootPos.heading.log());
             }
 
+            GoForwardsToIntakeBalls = drive.actionBuilder(IntakePosition) // switch to drive.localizer.getPose() to make s
+                    //grab balls
+                    .strafeTo(new Vector2d(BallsIntakenPos.position.x, BallsIntakenPos.position.y));
+
+
+
+            MoveTowardsIntakePosition = drive.actionBuilder(initialPos)
+                    //go to balls
+                    .strafeTo(new Vector2d(IntakePosition.position.x, IntakePosition.position.y))
+
+            ;
+
             Actions.runBlocking(
                     new SequentialAction(
 
@@ -603,6 +621,7 @@ public class RoadRunnerAuto extends LinearOpMode {
 
 
         }
+
         if (!FrontAuto){
 
             TrajectoryActionBuilder MoveToParkPosition = drive.actionBuilder(initialPos)

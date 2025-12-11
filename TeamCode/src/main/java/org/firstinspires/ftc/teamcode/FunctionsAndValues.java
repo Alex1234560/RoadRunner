@@ -13,8 +13,8 @@ public class FunctionsAndValues {
 
     private static double BackRangeStart = 90;
 
-    public static double After90ChangeInAngle = -3;
-    public static double After90ChangeInSpeed = 100;
+    public static double After90ChangeInAngle = 0; // was -3
+
     public static double SpeedToleranceToStartShooting = 60;
     public static double AngleToleranceToStartShooting = 2;
 
@@ -116,7 +116,7 @@ public class FunctionsAndValues {
 
 
     //range to rpm and angle
-    public double[] handleShootingRanges(double range) {
+    /*public double[] handleShootingRanges(double range) {
 
         double[] turretGoals = new double[2];
 
@@ -133,6 +133,34 @@ public class FunctionsAndValues {
         if (range>BackRangeStart){
             targSpeed+=After90ChangeInSpeed;
         }
+
+
+        turretGoals[0] = targAngle;
+        turretGoals[1] = targSpeed;
+        return turretGoals;
+    }*/
+    public double[] handleShootingRanges(double range) {
+
+        double[] turretGoals = new double[2];
+        double targAngle = 0;
+        double targSpeed = 0;
+
+        //double targAngle = (0.00493055 * range) + 0.243814;
+        if (range<BackRangeStart) {
+             targAngle = (0.00729122 * range) + 0.0887001;
+             targSpeed = (6.94554 * range) + 850.3396;
+        }else{
+            targAngle = (0.002*range)+0.64;
+            targSpeed = (5.24*range)+922.4;
+
+            if (range>130){targAngle=.9;}//normalize less than 99 to have .9
+        }
+
+        //normalize
+        if (targAngle>endPoint){targAngle=endPoint;}
+        if (targAngle<startPoint){targAngle=startPoint;}
+        if (targSpeed>2500){targSpeed=2500;}
+        if (targSpeed<0){targSpeed=0;}
 
 
         turretGoals[0] = targAngle;

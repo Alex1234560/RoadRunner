@@ -33,6 +33,7 @@ import com.acmerobotics.dashboard.config.Config;
 import com.acmerobotics.roadrunner.Pose2d;
 import com.acmerobotics.roadrunner.PoseVelocity2d;
 import com.acmerobotics.roadrunner.Vector2d;
+import com.qualcomm.hardware.motors.NeveRest3_7GearmotorV1;
 import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
@@ -186,7 +187,7 @@ public class CleanTeleop extends LinearOpMode {
 
         //if (gamepad2.dpad_left && currentAngle < 180) {currentAngle += 2;}
         //if (gamepad2.dpad_right && currentAngle > 0) {currentAngle -= 2;}
-        currentAngle -= gamepad2.right_stick_x*3.5;
+        currentAngle -= gamepad2.right_stick_x*5;
         if (currentAngle > 180) {currentAngle = 180;}
         if (currentAngle < 0) {currentAngle = 0;}
 
@@ -227,12 +228,11 @@ public class CleanTeleop extends LinearOpMode {
     }
 
     private void handleFlywheel(){
-        if (Math.abs(ShooterMotor.getVelocity())< Math.abs(ShooterMotor2.getVelocity())) {
-            shooterTPS = Math.abs( ShooterMotor2.getVelocity());
-        }
-        else {
-            shooterTPS = Math.abs(ShooterMotor.getVelocity()); // Ticks per second
-        }
+        double Motor1Vel = Math.abs(ShooterMotor.getVelocity());
+        double Motor2Vel =Math.abs(ShooterMotor2.getVelocity());
+        shooterTPS = (Motor2Vel +Motor1Vel) /2;
+        if (Motor2Vel==0){shooterTPS = Motor1Vel;}
+        if (Motor1Vel==0){shooterTPS = Motor2Vel;}
 
     //flywheel stuff.
 
@@ -282,6 +282,7 @@ public class CleanTeleop extends LinearOpMode {
         //IntakeMotor.setPower(-gamepad2.right_trigger * ShootMechanismPower);
         //StopIntakeMotor.setPower(gamepad2.right_trigger *ShootMechanismPower);
         BallFeederServo.setPower(gamepad2.right_trigger * ShootMechanismPower);
+        if (ShootMechanismPower==-1){BallFeederServo.setPower(-1);}
         BallFeederServo2.setPower(BallFeederServo.getPower());
 
 
@@ -335,9 +336,9 @@ public class CleanTeleop extends LinearOpMode {
     }
 
     private void handleDriving() {
-        double speed = 1; //
+        double speed = .5; //
         //if (gamepad1.right_trigger ==1){speed = 1;}
-        speed -= gamepad1.right_trigger / 2; // trigger makes it slower
+        speed += gamepad1.right_trigger/2 ; // trigger makes it slower
 
         double axial = -gamepad1.left_stick_y * speed;
         double lateral = gamepad1.left_stick_x * speed; // Note: pushing stick forward gives negative value
@@ -379,7 +380,7 @@ public class CleanTeleop extends LinearOpMode {
         // Initialize shooterAngle with the servo's current position to start.
         // This ensures it always has a value.
 
-        ShooterAngle-=gamepad2.left_stick_y/15;
+        ShooterAngle-=gamepad2.left_stick_y/22;
         //normalize
         if (ShooterAngle>FunctionsAndValues.endPoint){ShooterAngle=FunctionsAndValues.endPoint;}
         if (ShooterAngle<FunctionsAndValues.startPoint){ShooterAngle=FunctionsAndValues.startPoint;}

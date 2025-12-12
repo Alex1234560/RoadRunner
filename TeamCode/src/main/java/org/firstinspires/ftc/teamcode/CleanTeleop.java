@@ -352,7 +352,12 @@ public class CleanTeleop extends LinearOpMode {
         }
         if (gamepad1.dpad_down){
             axial= -.1;
-
+        }
+        if (gamepad1.x){
+            yaw -= .1;
+        }
+        if (gamepad1.b){
+            yaw += .1;
         }
 
         //depends on the auto u can add code here to change the starting angle of the field centric drive
@@ -367,7 +372,10 @@ public class CleanTeleop extends LinearOpMode {
         }
 
         if (gamepad1.yWasPressed()) {
-            fieldCentricDrive = !fieldCentricDrive;
+            fieldCentricDrive = true;
+        }
+        if (gamepad1.aWasPressed()) {
+            fieldCentricDrive = false;
         }
 
         if (fieldCentricDrive) {

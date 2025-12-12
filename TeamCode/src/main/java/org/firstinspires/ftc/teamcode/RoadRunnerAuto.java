@@ -516,7 +516,7 @@ public class RoadRunnerAuto extends LinearOpMode {
             BallsIntakenPos = new Pose2d(36.1, 50 * side, StartingAngle);
             ShootPos = new Pose2d(StartingX, StartingY, ShootAngle); // not sure if work on both sides
 
-            ParkPosition = new Pose2d(41, 26 * side, StartingAngle); // not sure if work on both sides
+            ParkPosition = new Pose2d(58, 35 * side, StartingAngle); // not sure if work on both sides
 
         }
 
@@ -640,12 +640,12 @@ public class RoadRunnerAuto extends LinearOpMode {
 
             Actions.runBlocking(
                     new SequentialAction(
-                            shooter.aim(true),
-                            new ParallelAction(
-
-                                    shooter.runShooter(true,false,false),
-                                    intake.passABallToShooter()
-                            ),
+//                            shooter.aim(true),
+//                            new ParallelAction(
+//
+//                                    shooter.runShooter(true,false,false),
+//                                    intake.passABallToShooter()
+//                            ),
 
                             MoveToParkPosition.build()
                     )

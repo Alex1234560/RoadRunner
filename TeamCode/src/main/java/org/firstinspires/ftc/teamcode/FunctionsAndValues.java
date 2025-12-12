@@ -150,10 +150,8 @@ public class FunctionsAndValues {
              targAngle = (0.00729122 * range) + 0.0887001;
              targSpeed = (6.94554 * range) + 850.3396;
         }else{
-            targAngle = (0.002*range)+0.64;
-            targSpeed = (5.24*range)+922.4;
-
-            if (range>130){targAngle=.9;}//normalize less than 99 to have .9
+            targAngle = .66;
+            targSpeed = 2050;
         }
 
         //normalize

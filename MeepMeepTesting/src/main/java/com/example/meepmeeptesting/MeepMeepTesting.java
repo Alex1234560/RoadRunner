@@ -59,7 +59,7 @@ public class MeepMeepTesting {
             BallsIntakenPos = new Pose2d(36.1, 50 * side, StartingAngle);
             ShootPos = new Pose2d(StartingX, StartingY, ShootAngle); // not sure if work on both sides
 
-            ParkPosition = new Pose2d(41, 26 * side, StartingAngle); // not sure if work on both sides
+            ParkPosition = new Pose2d(57, 45 * side, StartingAngle); // not sure if work on both sides
 
         }
 

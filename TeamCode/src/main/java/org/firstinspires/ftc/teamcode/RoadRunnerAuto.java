@@ -42,8 +42,6 @@ public class RoadRunnerAuto extends LinearOpMode {
 
     private FunctionsAndValues FAndV;
     private AprilTagVision vision;
-
-
     public class Intake {
         private DcMotorEx intakeMotor;
         private DcMotor StopIntakeMotor;
@@ -170,7 +168,6 @@ public class RoadRunnerAuto extends LinearOpMode {
         //public Action initializeBallFeeder() {return new InitializeBallFeeder();}
 
     }
-
     public class Shooter {
         private Servo ServoShooter1;
         private Servo ShooterRotatorServo;
@@ -458,19 +455,12 @@ public class RoadRunnerAuto extends LinearOpMode {
             telemetry.update();
         }
 
-        //vision.setManualExposure(AprilTagVision.myExposure, AprilTagVision.myGain);
-
-
-
-
-
         //side selection
         double StartingAngle;
         double ShootAngle;
         double StartingX;
         double StartingY;
         double distanceBetweenBalls = 23;
-
 
         //poses
         Pose2d initialPos;

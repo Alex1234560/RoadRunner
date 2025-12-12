@@ -228,11 +228,8 @@ public class CleanTeleop extends LinearOpMode {
     }
 
     private void handleFlywheel(){
-        double Motor1Vel = Math.abs(ShooterMotor.getVelocity());
-        double Motor2Vel =Math.abs(ShooterMotor2.getVelocity());
-        shooterTPS = (Motor2Vel +Motor1Vel) /2;
-        if (Motor2Vel==0){shooterTPS = Motor1Vel;}
-        if (Motor1Vel==0){shooterTPS = Motor2Vel;}
+
+        shooterTPS = FAndV.GetSpeedAvgFromTwoMotors(ShooterMotor.getVelocity(),ShooterMotor2.getVelocity());
 
     //flywheel stuff.
 
@@ -343,6 +340,20 @@ public class CleanTeleop extends LinearOpMode {
         double axial = -gamepad1.left_stick_y * speed;
         double lateral = gamepad1.left_stick_x * speed; // Note: pushing stick forward gives negative value
         double yaw = gamepad1.right_stick_x * speed;
+
+        if (gamepad1.dpad_right){
+            lateral= +.2;
+        }
+        if (gamepad1.dpad_left){
+            lateral= -.2;
+        }
+        if (gamepad1.dpad_up){
+            axial= +.1;
+        }
+        if (gamepad1.dpad_down){
+            axial= -.1;
+
+        }
 
         //depends on the auto u can add code here to change the starting angle of the field centric drive
 

@@ -218,8 +218,21 @@ public class FunctionsAndValues {
         return newPower;
 
     }
+    public double GetSpeedAvgFromTwoMotors(double Motor1Speed, double Motor2Speed ){
+        double Speed = 0;
+
+        double Motor1Vel = Math.abs(Motor1Speed);
+        double Motor2Vel =Math.abs(Motor2Speed);
+        Speed = (Motor2Vel +Motor1Vel) /2;
+        if (Motor2Vel==0){Speed = Motor1Vel;}
+        if (Motor1Vel==0){Speed = Motor2Vel;}
+
+        return Speed;
+    }
 
     }
+
+
 
 
 

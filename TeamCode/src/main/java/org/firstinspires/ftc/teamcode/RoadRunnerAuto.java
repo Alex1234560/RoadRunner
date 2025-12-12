@@ -241,13 +241,7 @@ public class RoadRunnerAuto extends LinearOpMode {
 
 
                     // setting for shooter starting angle of far auto -1 is blue 1 is red
-                    if (this.far){
-                        if (side==1)
-                        CurrentAngle = 40;
-                        else if (side==-1){
-                            CurrentAngle = 140;
-                        }
-                    }
+
 
                     ShooterRotatorServo.setPosition(CurrentAngle/180);
                 }
@@ -307,7 +301,7 @@ public class RoadRunnerAuto extends LinearOpMode {
                         telemetry.addData("No SPinning Ball Feeder : ", "");
                     }
 
-                    if (this.far && !vision.isTagVisible()){
+                    if (ShooterMotorPower == Math.abs(0) && !vision.isTagVisible()){
                         SpinShootingBallFeeder=false;
                     }
 
@@ -315,7 +309,7 @@ public class RoadRunnerAuto extends LinearOpMode {
                         accumulatedShootingTime += deltaTime;
                     }
 
-                    shooterTPS = ShooterMotor.getVelocity();
+                    shooterTPS = FAndV.GetSpeedAvgFromTwoMotors(ShooterMotor.getVelocity(),ShooterMotor2.getVelocity());
 
                     ShooterMotorPower = FAndV.handleShooter(shooterTPS,true, GoalTPS, ShooterMotorPower);
                     ShooterMotor.setPower(ShooterMotorPower);
@@ -325,8 +319,9 @@ public class RoadRunnerAuto extends LinearOpMode {
 
                     return true;
                 } else {
-                    ShooterMotor.setPower(0);
-                    ShooterMotor2.setPower(0);
+                    //turned off shooting break
+                    //ShooterMotor.setPower(0);
+                    //ShooterMotor2.setPower(0);
                     ShootingNow = false;
                     return false;
                 }
@@ -338,16 +333,19 @@ public class RoadRunnerAuto extends LinearOpMode {
             private double TimeToAutoAimBeforeSpinningUp = .2;
 
             private boolean initialized = false;
+
+            private double MaxAimingTime = 5;
             private ElapsedTime timer; // To track time
             private double AprilTagBearing = 0;
             private double CurrentAngle = 90;
+            private boolean far=false;
+            //private double ShooterMotorPower=0;
+
+            private double GoalAngleError = 1;
             private FunctionsAndValues FAndV;
-
-
-
-
-            public Aim() {
+            public Aim(boolean far) {
                 this.timer = new ElapsedTime(); // This creates the timer object.
+                this.far = far;
 
             }
 
@@ -358,13 +356,23 @@ public class RoadRunnerAuto extends LinearOpMode {
                     initialized = true;
                     this.FAndV = new FunctionsAndValues();
                     CurrentAngle = ShooterRotatorServo.getPosition()*180;
+                    if (this.far){
+                        if (side==1)
+                            CurrentAngle = 40;
+                        else if (side==-1){
+                            CurrentAngle = 140;
+                        }
+                    }
+                    ShooterRotatorServo.setPosition(CurrentAngle);
+
+                    AprilTagBearing = 999; // doesnt matter as will get rewritten over later.
 
 
                 }
 
 
                 packet.put("time", timer.seconds());
-                if(timer.seconds() < TimeToAutoAimBeforeSpinningUp || ShootingNow) {
+                if(timer.seconds() < MaxAimingTime && AprilTagBearing > GoalAngleError) {
                     vision.update();
                     telemetry.addData("AprilTag: ", vision.isTagVisible());
 
@@ -373,18 +381,32 @@ public class RoadRunnerAuto extends LinearOpMode {
                             AprilTagBearing = vision.getBearing();
                             range=vision.getRange();
                         }
+
+                        double[] ShooterRotatorServoAngle = this.FAndV.calculateShooterRotation(AprilTagBearing, true, CurrentAngle, true, range);
+                        ShooterRotatorServo.setPosition(ShooterRotatorServoAngle[0]);
+                        CurrentAngle = ShooterRotatorServoAngle[1];
+                        AprilTagBearing = ShooterRotatorServoAngle[2];
+
+
+                        if (range != 0) {
+                            double[] shooterGoals = FAndV.handleShootingRanges(range);
+                            GoalTPS = shooterGoals[1];
+                            double ServoAngle = shooterGoals[0];
+                            ServoShooter1.setPosition(ServoAngle);
+
+
+
+                        }
+
+//                        double shooterTPS = FAndV.GetSpeedAvgFromTwoMotors(ShooterMotor.getVelocity(),ShooterMotor2.getVelocity());
+//                        ShooterMotorPower = FAndV.handleShooter(shooterTPS,true, GoalTPS, ShooterMotorPower);
+//                        ShooterMotor.setPower(ShooterMotorPower);
+//                        ShooterMotor2.setPower(ShooterMotorPower);
+
                     }
 
-                    double[] ShooterRotatorServoAngle = this.FAndV.calculateShooterRotation(AprilTagBearing, true, CurrentAngle, true, range);
-                    ShooterRotatorServo.setPosition(ShooterRotatorServoAngle[0]);
-                    CurrentAngle = ShooterRotatorServoAngle[1];
-                    AprilTagBearing = ShooterRotatorServoAngle[2];
 
-                    telemetry.addData("PowerTo Servo: ", ShooterRotatorServoAngle[0]);
-                    telemetry.addData("AprilBearing: ", AprilTagBearing);
-                    telemetry.addData("CurrentANgle: ", CurrentAngle);
 
-                    telemetry.update();
 
                     return true;
                 } else {
@@ -392,7 +414,7 @@ public class RoadRunnerAuto extends LinearOpMode {
                 }
             }
         }
-        public Action aim() {return new Aim();}
+        public Action aim(boolean far) {return new Aim(far);}
 
         public class CenterShooter implements Action {
 
@@ -498,7 +520,6 @@ public class RoadRunnerAuto extends LinearOpMode {
 
         }
 
-
         MecanumDrive drive = new MecanumDrive(hardwareMap, initialPos);
         Intake intake = new Intake(hardwareMap);
         Shooter shooter = new Shooter(hardwareMap);
@@ -506,7 +527,6 @@ public class RoadRunnerAuto extends LinearOpMode {
         ElapsedTime autoTimer = new ElapsedTime();
         //poses
         waitForStart();
-
 
         if (isStopRequested()) return;
         autoTimer.reset();
@@ -568,10 +588,10 @@ public class RoadRunnerAuto extends LinearOpMode {
                                 MoveTowardsIntakePosition.build(),
                                 intake.intakeOn(),
                                 GoForwardsToIntakeBalls.build(),
-                                intake.intakeOff(),
                                 GoToShootPos.build(),
+                                intake.intakeOff(),
                                 shooter.centerShooter(),
-
+                                shooter.aim(false),
                                 new ParallelAction(
                                         shooter.runShooter(false,true,false),
                                         intake.passABallToShooter()
@@ -620,8 +640,9 @@ public class RoadRunnerAuto extends LinearOpMode {
 
             Actions.runBlocking(
                     new SequentialAction(
-
+                            shooter.aim(true),
                             new ParallelAction(
+
                                     shooter.runShooter(true,false,false),
                                     intake.passABallToShooter()
                             ),

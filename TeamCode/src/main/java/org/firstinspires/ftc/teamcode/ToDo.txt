@@ -1,9 +1,4 @@
-MAKE ROBOT FASTER
-
-1 Auto Spool and aim before actually getting to shoot pos to be faster, and shoot from a more efficient position
-2 tune april tag code graph for back.
-4 make auto for back
-
+Fix that when it doesnt see the code it faces sideways and shoots.
 
 LESS IMPORTANT:
 

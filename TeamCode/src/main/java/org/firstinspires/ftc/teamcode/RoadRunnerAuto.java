@@ -245,6 +245,8 @@ public class RoadRunnerAuto extends LinearOpMode {
 
                     ShooterRotatorServo.setPosition(CurrentAngle/180);
                 }
+                //thing below basically makes it so it doesnt move unless it detects a code.
+                AprilTagBearing = 0; //cuz if it doesnt scan in the aim function, then it uses the april tag default value in the other aim thing which is 999 so it causes it to go sideways
 
                 double ShootingDurationMax;
 
@@ -262,6 +264,9 @@ public class RoadRunnerAuto extends LinearOpMode {
                 packet.put("time", GlobalTimer.seconds());
                 if(GlobalTimer.seconds() < ShootingDurationMax && accumulatedShootingTime < shootingDuration ){//(timer.seconds() < duration) {
                     //handling aiming below
+
+
+
 
                     if (this.middle || this.far) {
                         vision.update();
@@ -346,7 +351,6 @@ public class RoadRunnerAuto extends LinearOpMode {
             public Aim(boolean far) {
                 this.timer = new ElapsedTime(); // This creates the timer object.
                 this.far = far;
-
             }
 
             @Override
@@ -640,12 +644,12 @@ public class RoadRunnerAuto extends LinearOpMode {
 
             Actions.runBlocking(
                     new SequentialAction(
-//                            shooter.aim(true),
-//                            new ParallelAction(
-//
-//                                    shooter.runShooter(true,false,false),
-//                                    intake.passABallToShooter()
-//                            ),
+                            shooter.aim(true),
+                            new ParallelAction(
+
+                                    shooter.runShooter(true,false,false),
+                                    intake.passABallToShooter()
+                            ),
 
                             MoveToParkPosition.build()
                     )
